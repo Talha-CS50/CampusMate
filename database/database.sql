@@ -4,19 +4,15 @@ CREATE DATABASE IF NOT EXISTS campus_mate;
 USE campus_mate;
 
 
--- ============================================
+
 -- 1. Departments
--- ============================================
 
 CREATE TABLE departments (
     department_id INT AUTO_INCREMENT PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL UNIQUE
 );
 
-
--- ============================================
 -- 2. Admins
--- ============================================
 
 CREATE TABLE admins (
     admin_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -27,9 +23,7 @@ CREATE TABLE admins (
 );
 
 
--- ============================================
 -- 3. Students
--- ============================================
 
 CREATE TABLE students (
     student_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -48,9 +42,8 @@ CREATE TABLE students (
 );
 
 
--- ============================================
+
 -- 4. Courses
--- ============================================
 
 CREATE TABLE courses (
     course_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -65,10 +58,7 @@ CREATE TABLE courses (
         ON UPDATE CASCADE
 );
 
-
--- ============================================
 -- 5. Notes
--- ============================================
 
 CREATE TABLE notes (
     note_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,10 +80,7 @@ CREATE TABLE notes (
         ON UPDATE CASCADE
 );
 
-
--- ============================================
 -- 6. Note Reviews
--- ============================================
 
 CREATE TABLE note_reviews (
     review_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -117,9 +104,8 @@ CREATE TABLE note_reviews (
 );
 
 
--- ============================================
+
 -- 7. Downloads
--- ============================================
 
 CREATE TABLE downloads (
     download_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -139,9 +125,8 @@ CREATE TABLE downloads (
 );
 
 
--- ============================================
+
 -- 8. Notices
--- ============================================
 
 CREATE TABLE notices (
     notice_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -159,9 +144,8 @@ CREATE TABLE notices (
 );
 
 
--- ============================================
+
 -- 9. Opportunities
--- ============================================
 
 CREATE TABLE opportunities (
     opportunity_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -181,9 +165,8 @@ CREATE TABLE opportunities (
 );
 
 
--- ============================================
+
 -- 10. Campus Issues
--- ============================================
 
 CREATE TABLE campus_issues (
     issue_id INT AUTO_INCREMENT PRIMARY KEY,
