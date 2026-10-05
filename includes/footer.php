@@ -1,12 +1,21 @@
 <footer class="footer">
 
-    <div class="container footer-content">
+    <div class="container footer-main">
 
+        <!-- Brand -->
         <div class="footer-brand">
 
             <a href="/CampusMate/" class="logo">
-                <span class="logo-icon">CM</span>
-                <span>Campus<span>Mate</span></span>
+
+                <span class="logo-mark">
+                    <span class="logo-cap"></span>
+                    <span class="logo-base"></span>
+                </span>
+
+                <span class="logo-text">
+                    Campus<span>Mate</span>
+                </span>
+
             </a>
 
             <p>
@@ -14,42 +23,83 @@
                 campus life, and future opportunities.
             </p>
 
+            <div class="footer-socials">
+
+                <a href="#" aria-label="Facebook">f</a>
+                <a href="#" aria-label="Instagram">◎</a>
+                <a href="#" aria-label="LinkedIn">in</a>
+                <a href="#" aria-label="GitHub">⌘</a>
+
+            </div>
+
         </div>
 
 
-        <div class="footer-links">
+        <!-- Platform -->
+        <div class="footer-column">
 
-            <div>
-                <h4>Platform</h4>
-                <a href="#features">Features</a>
-                <a href="#notices">Notices</a>
-                <a href="#opportunities">Opportunities</a>
-            </div>
+            <h4>Platform</h4>
 
-            <div>
-                <h4>Account</h4>
-                <a href="/CampusMate/student/login.php">Login</a>
-                <a href="/CampusMate/student/register.php">Register</a>
-            </div>
+            <a href="#features">Features</a>
+            <a href="#notices">Notices</a>
+            <a href="#opportunities">Opportunities</a>
+            <a href="#">Campus Issues</a>
 
-            <div>
-                <h4>Support</h4>
-                <a href="#">Help Center</a>
-                <a href="#">Contact Us</a>
-            </div>
+        </div>
+
+
+        <!-- Resources -->
+        <div class="footer-column">
+
+            <h4>Resources</h4>
+
+            <a href="#">Note Sharing</a>
+            <a href="#">Search Notes</a>
+            <a href="#">Scholarships</a>
+            <a href="#">Career Opportunities</a>
+
+        </div>
+
+
+        <!-- Account -->
+        <div class="footer-column">
+
+            <h4>Account</h4>
+
+            <a href="/CampusMate/student/login.php">
+                Student Login
+            </a>
+
+            <a href="/CampusMate/student/register.php">
+                Create Account
+            </a>
+
+            <a href="/CampusMate/admin/">
+                Admin Panel
+            </a>
 
         </div>
 
     </div>
 
 
+    <!-- Footer bottom -->
+
     <div class="footer-bottom">
 
-        <div class="container">
+        <div class="container footer-bottom-content">
 
             <p>
                 © 2026 Campus Mate. All rights reserved.
             </p>
+
+            <div class="footer-bottom-links">
+
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Contact</a>
+
+            </div>
 
             <p>
                 Built for students, by students.
