@@ -7,8 +7,6 @@
 
 <section class="hero">
 
-    <!-- Decorative background circles -->
-
     <div class="hero-orb orb-one"></div>
     <div class="hero-orb orb-two"></div>
     <div class="hero-orb orb-three"></div>
