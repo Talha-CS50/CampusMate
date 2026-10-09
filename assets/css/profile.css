@@ -1,0 +1,585 @@
+
+/* ==================================
+   CAMPUS MATE - STUDENT PROFILE
+================================== */
+
+.profile-page {
+    min-height: 100vh;
+    margin: 0;
+    background: #f5f7fc;
+    color: #172033;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Roboto, Arial, sans-serif;
+}
+
+/* Navigation */
+
+.profile-nav {
+    min-height: 70px;
+    padding: 0 7%;
+    background: #ffffff;
+    border-bottom: 1px solid #e9edf5;
+    box-sizing: border-box;
+}
+
+.profile-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.profile-nav-link {
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.profile-nav-link:hover {
+    color: #6257e8;
+}
+
+/* Main layout */
+
+.profile-main {
+    width: min(1180px, 88%);
+    margin: 34px auto 0;
+}
+
+/* Gradient banner */
+
+.profile-banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 190px;
+    padding: 35px 45px;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-radius: 22px;
+    background: linear-gradient(115deg, #4338ca 0%, #6556e8 55%, #8b5cf6 100%);
+    color: #ffffff;
+    box-shadow: 0 15px 35px rgba(79, 70, 229, 0.18);
+}
+
+.profile-banner-content {
+    position: relative;
+    z-index: 1;
+}
+
+.profile-eyebrow,
+.profile-section-kicker {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.profile-eyebrow {
+    color: #ddd9ff;
+}
+
+.profile-banner h1 {
+    margin: 0 0 10px;
+    color: #ffffff;
+    font-size: clamp(30px, 4vw, 40px);
+    font-weight: 750;
+    letter-spacing: -1px;
+}
+
+.profile-banner p {
+    margin: 0;
+    color: #e9e7ff;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.profile-banner-decoration {
+    position: absolute;
+    top: -25px;
+    right: 30px;
+    width: 220px;
+    height: 220px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+}
+
+.profile-banner-decoration::before,
+.profile-banner-decoration::after {
+    position: absolute;
+    content: "";
+    border: 1px solid rgba(255, 255, 255, 0.17);
+    border-radius: 50%;
+}
+
+.profile-banner-decoration::before {
+    inset: 20px;
+}
+
+.profile-banner-decoration::after {
+    inset: 42px;
+}
+
+.profile-banner-decoration span {
+    position: absolute;
+    color: #e5e2ff;
+}
+
+.profile-banner-decoration span:nth-child(1) {
+    top: 38px;
+    left: 42px;
+    font-size: 25px;
+}
+
+.profile-banner-decoration span:nth-child(2) {
+    right: 35px;
+    bottom: 43px;
+    font-size: 34px;
+}
+
+.profile-banner-decoration span:nth-child(3) {
+    top: 90px;
+    right: 15px;
+    font-size: 17px;
+}
+
+/* Two-column profile layout */
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 310px minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+    margin-top: 28px;
+}
+
+/* Student summary card */
+
+.profile-summary-card {
+    padding: 32px 25px 25px;
+    background: #ffffff;
+    border: 1px solid #e9edf5;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 8px 28px rgba(27, 39, 72, 0.045);
+}
+
+.profile-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 17px;
+    border: 5px solid #eeecff;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #635bdb, #9488ff);
+    color: #ffffff;
+    font-size: 43px;
+    font-weight: 750;
+    box-shadow: 0 7px 20px rgba(99, 91, 219, 0.2);
+}
+
+.profile-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 30px;
+    background: #ecfdf3;
+    color: #15803d;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.profile-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+.profile-summary-card h2 {
+    margin: 18px 0 8px;
+    color: #18223a;
+    font-size: 23px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.profile-email {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.profile-summary-divider {
+    height: 1px;
+    margin: 25px 0;
+    background: #edf0f6;
+}
+
+.profile-mini-info {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 18px;
+    padding: 13px;
+    border: 1px solid #edf0f6;
+    border-radius: 12px;
+    text-align: left;
+    background: #fcfcff;
+}
+
+.profile-mini-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: #eeecff;
+    font-size: 19px;
+}
+
+.profile-mini-info > div {
+    min-width: 0;
+}
+
+.profile-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #7b8499;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.profile-mini-info strong {
+    display: block;
+    color: #26324b;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.profile-back-button {
+    display: block;
+    margin-top: 24px;
+    padding: 13px 12px;
+    border: 1px solid #e2e5ff;
+    border-radius: 10px;
+    background: #f4f3ff;
+    color: #5045ce;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.profile-back-button span {
+    margin-right: 5px;
+}
+
+.profile-back-button:hover {
+    background: #eae8ff;
+    transform: translateY(-1px);
+}
+
+
+/* Edit Profile Button */
+.profile-button {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 13px 20px;
+    border: 1px solid #5045ce;
+    border-radius: 10px;
+    background: #5045ce;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.profile-button:hover {
+    background: #3f35b5;
+    border-color: #3f35b5;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* Academic information section */
+
+.profile-details-section {
+    min-width: 0;
+}
+
+.profile-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin: 3px 0 22px;
+}
+
+.profile-section-kicker {
+    margin-bottom: 7px;
+    color: #7569e8;
+    font-size: 10px;
+}
+
+.profile-section-heading h2 {
+    margin: 0 0 8px;
+    color: #1c2740;
+    font-size: 25px;
+    letter-spacing: -0.5px;
+}
+
+.profile-section-heading p {
+    margin: 0;
+    color: #7b8499;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.profile-heading-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #eeecff;
+    color: #6257df;
+    font-size: 27px;
+}
+
+/* Information cards */
+
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.profile-info-card {
+    min-width: 0;
+    min-height: 155px;
+    padding: 20px;
+    box-sizing: border-box;
+    border: 1px solid #e9edf5;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(27, 39, 72, 0.025);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(27, 39, 72, 0.07);
+}
+
+.profile-info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 43px;
+    height: 43px;
+    margin-bottom: 17px;
+    border-radius: 12px;
+    font-size: 19px;
+}
+
+.icon-purple {
+    background: #eeecff;
+}
+
+.icon-blue {
+    background: #e7f3ff;
+}
+
+.icon-green {
+    background: #e4faef;
+}
+
+.icon-orange {
+    background: #fff0df;
+}
+
+.icon-pink {
+    background: #ffe8f2;
+}
+
+.profile-info-card h3 {
+    margin: 0 0 8px;
+    color: #202b43;
+    font-size: 17px;
+    font-weight: 750;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.profile-info-card h3.profile-email-value {
+    font-size: 13px;
+}
+
+.profile-info-card p {
+    margin: 0;
+    color: #8a93a6;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.profile-semester-card {
+    grid-column: 1 / -1;
+    min-height: auto;
+}
+
+/* Helpful tip */
+
+.profile-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    margin-top: 20px;
+    padding: 19px;
+    border: 1px solid #e4e2ff;
+    border-radius: 14px;
+    background: linear-gradient(120deg, #f3f2ff, #faf9ff);
+}
+
+.profile-tip-icon {
+    font-size: 23px;
+}
+
+.profile-tip strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #39318f;
+    font-size: 13px;
+}
+
+.profile-tip p {
+    margin: 0;
+    color: #747394;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* Footer */
+
+.profile-footer {
+    padding: 30px 10px;
+    color: #8b93a6;
+    font-size: 12px;
+    text-align: center;
+}
+
+.profile-footer span {
+    color: #e879a9;
+}
+
+/* Responsive design */
+
+@media (max-width: 950px) {
+    .profile-layout {
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    .profile-summary-card {
+        padding: 27px 18px 22px;
+    }
+
+    .profile-info-card {
+        padding: 16px;
+    }
+
+    .profile-main {
+        width: 92%;
+    }
+}
+
+@media (max-width: 700px) {
+    .profile-nav {
+        padding: 15px 4%;
+    }
+
+    .profile-nav-actions {
+        gap: 12px;
+    }
+
+    .profile-nav-link {
+        font-size: 12px;
+    }
+
+    .profile-main {
+        width: 92%;
+        margin-top: 20px;
+    }
+
+    .profile-banner {
+        min-height: 165px;
+        padding: 28px 24px;
+        border-radius: 17px;
+    }
+
+    .profile-banner-decoration {
+        right: -115px;
+        opacity: 0.65;
+    }
+
+    .profile-layout {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .profile-summary-card {
+        max-width: 100%;
+    }
+
+    .profile-section-heading h2 {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 420px) {
+    .profile-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-semester-card {
+        grid-column: auto;
+    }
+
+    .profile-banner {
+        padding: 25px 20px;
+    }
+
+    .profile-banner p {
+        max-width: 230px;
+        font-size: 13px;
+    }
+
+    .profile-nav-actions {
+        gap: 9px;
+    }
+
+    .profile-nav-link {
+        font-size: 11px;
+    }
+
+    .profile-nav .logout-button {
+        padding: 9px 11px;
+        font-size: 12px;
+    }
+}

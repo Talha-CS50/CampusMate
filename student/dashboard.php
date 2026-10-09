@@ -79,6 +79,11 @@ if (!isset($_SESSION["student_db_id"])) {
 
         </div>
 
+
+<a href="profile.php" class="profile-button">
+    My Profile
+</a>
+
     </main>
 
 </div>
