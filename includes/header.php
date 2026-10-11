@@ -1,3 +1,11 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$isLoggedIn = isset($_SESSION['student_db_id']);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -30,7 +38,6 @@
 
         </a>
 
-
         <!-- Navigation -->
         <nav class="nav-links">
 
@@ -38,31 +45,48 @@
                 Home
             </a>
 
-            <a href="#features">
+            <a href="/CampusMate/#features">
                 Features
             </a>
 
-            <a href="#notices">
+            <a href="/CampusMate/#notices">
                 Notices
             </a>
 
-            <a href="#opportunities">
+            <a href="/CampusMate/#opportunities">
                 Opportunities
             </a>
 
         </nav>
 
-
         <!-- Buttons -->
         <div class="nav-buttons">
 
-            <a href="/CampusMate/student/login.php" class="login-btn">
-                Login
-            </a>
+            <?php if ($isLoggedIn): ?>
 
-            <a href="/CampusMate/student/register.php" class="register-btn">
-                Get Started
-            </a>
+                <a href="/CampusMate/student/dashboard.php" class="login-btn">
+                    Dashboard
+                </a>
+
+                <a href="/CampusMate/student/profile.php" class="login-btn">
+                    My Profile
+                </a>
+
+                <a href="/CampusMate/student/logout.php" class="login-btn">
+                    Logout
+                </a>
+
+            <?php else: ?>
+
+                <a href="/CampusMate/student/login.php" class="login-btn">
+                    Login
+                </a>
+
+                <a href="/CampusMate/student/register.php" class="register-btn">
+                    Get Started
+                </a>
+
+            <?php endif; ?>
 
         </div>
 
