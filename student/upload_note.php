@@ -6,7 +6,7 @@ if (!isset($_SESSION['student_db_id'])) {
     exit();
 }
 
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
 
 $success = "";
 $error = "";
@@ -60,6 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $signature = $file_handle
                 ? fread($file_handle, 5)
                 : "";
+
             if ($file_handle) {
                 fclose($file_handle);
             }
@@ -69,41 +70,72 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $signature !== "%PDF-"
             ) {
                 $error = "Only valid PDF files are allowed.";
+
             } else {
                 // Check whether selected course exists
                 $course_check = mysqli_prepare(
                     $conn,
-                    "SELECT course_id FROM courses WHERE course_id = ?"
+                    "SELECT course_id
+                     FROM courses
+                     WHERE course_id = ?"
                 );
 
-                mysqli_stmt_bind_param(
-                    $course_check,
-                    "i",
-                    $course_id
-                );
-
-                mysqli_stmt_execute($course_check);
-                $course_result = mysqli_stmt_get_result($course_check);
-                $course_exists = mysqli_num_rows($course_result) > 0;
-                mysqli_stmt_close($course_check);
-
-                if (!$course_exists) {
-                    $error = "Please select a valid course.";
+                if (!$course_check) {
+                    $error = "Could not validate the selected course.";
                 } else {
-                    // Upload directory
-                    $upload_dir = dirname(__DIR__) . "/uploads/notes/";
+                    mysqli_stmt_bind_param(
+                        $course_check,
+                        "i",
+                        $course_id
+                    );
 
+                    mysqli_stmt_execute($course_check);
+
+                    $course_result = mysqli_stmt_get_result(
+                        $course_check
+                    );
+
+                    $course_exists = mysqli_num_rows($course_result) > 0;
+
+                    mysqli_stmt_close($course_check);
+
+                    if (!$course_exists) {
+                        $error = "Please select a valid course.";
+                    }
+                }
+
+                if ($error === "") {
+
+                    // Upload directory:
+                    // CampusMate/student/uploads/notes/
+                    $upload_dir = __DIR__ . "/uploads/notes/";
+
+                    // Create directory if it does not exist
+                    if (!is_dir($upload_dir)) {
+                        if (
+                            !mkdir($upload_dir, 0755, true) &&
+                            !is_dir($upload_dir)
+                        ) {
+                            $error = "Could not create the upload directory.";
+                        }
+                    }
+
+                    // Check directory permissions
                     if (
-                        !is_dir($upload_dir) &&
-                        !mkdir($upload_dir, 0755, true)
+                        $error === "" &&
+                        !is_writable($upload_dir)
                     ) {
-                        $error = "Could not create the upload directory.";
-                    } elseif (!is_writable($upload_dir)) {
                         $error = "Upload directory is not writable.";
-                    } else {
+                    }
+
+                    if ($error === "") {
+
                         // Generate a unique filename
                         $new_filename = bin2hex(random_bytes(16)) . ".pdf";
+
                         $destination = $upload_dir . $new_filename;
+
+                        // Relative path used by notes.php
                         $relative_path = "uploads/notes/" . $new_filename;
 
                         if (
@@ -118,35 +150,56 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             $stmt = mysqli_prepare(
                                 $conn,
                                 "INSERT INTO notes
-                                (title, faculty_name, description,
-                                 file_path, student_db_id, course_id)
+                                (
+                                    title,
+                                    faculty_name,
+                                    description,
+                                    file_path,
+                                    student_db_id,
+                                    course_id
+                                )
                                 VALUES (?, ?, ?, ?, ?, ?)"
                             );
 
-                            mysqli_stmt_bind_param(
-                                $stmt,
-                                "ssssii",
-                                $title,
-                                $faculty_name,
-                                $description,
-                                $relative_path,
-                                $student_db_id,
-                                $course_id
-                            );
+                            if (!$stmt) {
+                                // Remove uploaded file if query preparation fails
+                                if (is_file($destination)) {
+                                    unlink($destination);
+                                }
 
-                            if (mysqli_stmt_execute($stmt)) {
-                                mysqli_stmt_close($stmt);
-
-                                header(
-                                    "Location: upload_note.php?uploaded=1"
-                                );
-                                exit();
+                                $error = "Could not prepare the note for saving.";
                             } else {
-                                // Remove uploaded file if DB save fails
-                                unlink($destination);
-                                $error = "Could not save the note. Please try again.";
-                                mysqli_stmt_close($stmt);
+                                mysqli_stmt_bind_param(
+                                    $stmt,
+                                    "ssssii",
+                                    $title,
+                                    $faculty_name,
+                                    $description,
+                                    $relative_path,
+                                    $student_db_id,
+                                    $course_id
+                                );
+
+                                if (mysqli_stmt_execute($stmt)) {
+                                    mysqli_stmt_close($stmt);
+
+                                    header(
+                                        "Location: upload_note.php?uploaded=1"
+                                    );
+                                    exit();
+
+                                } else {
+                                    // Remove uploaded file if DB save fails
+                                    if (is_file($destination)) {
+                                        unlink($destination);
+                                    }
+
+                                    $error = "Could not save the note. Please try again.";
+
+                                    mysqli_stmt_close($stmt);
+                                }
                             }
+
                         } else {
                             $error = "File upload failed. Please try again.";
                         }
@@ -157,7 +210,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-include "../includes/header.php";
+include __DIR__ . "/../includes/header.php";
 ?>
 
 <style>
@@ -258,6 +311,7 @@ include "../includes/header.php";
 
 <div class="upload-container">
     <h2>Upload Study Notes</h2>
+
     <p class="upload-subtitle">
         Share your study materials with other students.
     </p>
@@ -282,6 +336,7 @@ include "../includes/header.php";
     >
         <div class="form-group">
             <label for="title">Note Title *</label>
+
             <input
                 type="text"
                 id="title"
@@ -295,6 +350,7 @@ include "../includes/header.php";
 
         <div class="form-group">
             <label for="faculty_name">Faculty Name *</label>
+
             <input
                 type="text"
                 id="faculty_name"
@@ -308,16 +364,20 @@ include "../includes/header.php";
 
         <div class="form-group">
             <label for="course_id">Course *</label>
+
             <select id="course_id" name="course_id" required>
                 <option value="">Select a course</option>
 
                 <?php if ($courses_query): ?>
-                    <?php while ($course = mysqli_fetch_assoc($courses_query)): ?>
+                    <?php while (
+                        $course = mysqli_fetch_assoc($courses_query)
+                    ): ?>
                         <option
                             value="<?= (int) $course['course_id'] ?>"
                             <?= (
                                 isset($_POST['course_id']) &&
-                                (int) $_POST['course_id'] === (int) $course['course_id']
+                                (int) $_POST['course_id'] ===
+                                (int) $course['course_id']
                             ) ? 'selected' : '' ?>
                         >
                             <?= htmlspecialchars($course['course_code']) ?>
@@ -331,6 +391,7 @@ include "../includes/header.php";
 
         <div class="form-group">
             <label for="description">Description</label>
+
             <textarea
                 id="description"
                 name="description"
@@ -339,7 +400,10 @@ include "../includes/header.php";
         </div>
 
         <div class="form-group">
-            <label for="note_file">Select PDF File * (Maximum 5 MB)</label>
+            <label for="note_file">
+                Select PDF File * (Maximum 5 MB)
+            </label>
+
             <input
                 type="file"
                 id="note_file"
@@ -355,5 +419,5 @@ include "../includes/header.php";
     </form>
 </div>
 
-<?php include "../includes/footer.php"; ?>
+<?php include __DIR__ . "/../includes/footer.php"; ?>
 

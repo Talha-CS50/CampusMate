@@ -1,4 +1,3 @@
-
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -90,6 +89,14 @@ $result = mysqli_query($conn, $sql);
 
         .page-header {
             margin-bottom: 25px;
+        }
+
+        /* Heading and Upload button */
+        .page-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
         }
 
         .page-header h1 {
@@ -230,6 +237,14 @@ $result = mysqli_query($conn, $sql);
             color: #173b70;
         }
 
+        /* Upload Note button */
+        .upload-btn {
+            flex-shrink: 0;
+            padding: 12px 18px;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
         .review-details {
             margin-top: 15px;
             padding-top: 12px;
@@ -349,6 +364,11 @@ $result = mysqli_query($conn, $sql);
                 font-size: 25px;
             }
 
+            .page-header-top {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
             .note-card {
                 padding: 16px;
             }
@@ -377,11 +397,21 @@ if (file_exists($headerPath)) {
 <main class="page">
 
     <header class="page-header">
-        <h1>Study Notes</h1>
-        <p>
-            Explore study materials, view PDFs, and read reviews shared
-            by other students.
-        </p>
+        <div class="page-header-top">
+
+            <div>
+                <h1>Study Notes</h1>
+                <p>
+                    Explore study materials, view PDFs, and read reviews shared
+                    by other students.
+                </p>
+            </div>
+
+            <a href="upload_note.php" class="btn btn-primary upload-btn">
+                + Upload Note
+            </a>
+
+        </div>
     </header>
 
     <section class="notes-list">
