@@ -108,6 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                     // Upload directory:
                     // CampusMate/student/uploads/notes/
+                    
                     $upload_dir = __DIR__ . "/uploads/notes/";
 
                     // Create directory if it does not exist
