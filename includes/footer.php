@@ -74,8 +74,8 @@
                 Create Account
             </a>
 
-            <a href="/CampusMate/admin/">
-                Admin Panel
+            <a href="/CampusMate/admin/login.php">
+                Admin Login
             </a>
 
         </div>
