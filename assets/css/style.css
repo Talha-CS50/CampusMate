@@ -1068,6 +1068,57 @@ a {
     gap: 22px;
 }
 
+.notice-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.featured-notice-link {
+    min-width: 0;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.notice-grid > .notice-list {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+}
+
+.notice-card-link:focus-visible {
+    outline: 3px solid #6366f1;
+    outline-offset: 4px;
+    border-radius: 18px;
+}
+
+.notice-all-link-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.notice-all-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 19px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(120deg, #6366f1, #9333ea 55%, #ec4899);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(124, 58, 237, .25);
+    transition: box-shadow .2s, transform .2s, filter .2s;
+}
+
+.notice-all-link:hover {
+    transform: translateY(-2px);
+    filter: saturate(1.15);
+    box-shadow: 0 11px 25px rgba(124, 58, 237, .32);
+}
+
 .large-notice-card {
     position: relative;
 
@@ -1179,12 +1230,19 @@ a {
     gap: 12px;
 }
 
+.notice-list > .notice-card-link,
+.notice-list-empty {
+    flex: 1 1 0;
+    min-height: 0;
+}
+
 .notice-list-item {
     display: flex;
 
     align-items: center;
 
     gap: 15px;
+    height: 100%;
 
     padding: 19px;
 
@@ -1981,6 +2039,16 @@ a {
     .opportunity-grid,
     .notice-grid {
         grid-template-columns: 1fr;
+    }
+
+    .notice-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .featured-notice-link,
+    .notice-grid > .notice-list {
+        grid-column: 1;
+        grid-row: auto;
     }
 
 

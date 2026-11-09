@@ -1,5 +1,21 @@
 
-<?php include 'includes/header.php'; ?>
+<?php
+require_once __DIR__ . '/config/db.php';
+
+$homepageNoticesResult = mysqli_query(
+    $conn,
+    'SELECT notice_id, title, description, notice_type, deadline, created_at
+     FROM notices
+     ORDER BY created_at DESC
+     LIMIT 4'
+);
+$homepageNotices = [];
+while ($homepageNotice = mysqli_fetch_assoc($homepageNoticesResult)) {
+    $homepageNotices[] = $homepageNotice;
+}
+
+include 'includes/header.php';
+?>
 
 
 <!-- HERO SECTION -->
@@ -299,77 +315,128 @@
 
         <div class="notice-grid">
 
-            <div class="large-notice-card">
-
-                <div class="notice-card-top">
-
-                    <span class="notice-tag">Important</span>
-                    <span class="notice-date">Sep 30, 2026</span>
-
-                </div>
-
-                <div class="notice-big-icon">📢</div>
-
-                <h3>Semester Registration Deadline</h3>
-
-                <p>
-                    Students are requested to complete their
-                    semester registration before the deadline.
-                </p>
-
-                <a href="#notices">Read More →</a>
-
-            </div>
-
-
+            <?php if ($homepageNotices): ?>
+            <?php $featuredNotice = $homepageNotices[0]; ?>
             <div class="notice-list">
 
+                <?php foreach (array_slice($homepageNotices, 1) as $notice): ?>
+                <a
+                    class="notice-card-link"
+                    href="/CampusMate/notice.php?id=<?= (int)$notice['notice_id'] ?>"
+                >
                 <div class="notice-list-item">
 
                     <div class="list-icon">📅</div>
 
                     <div>
-                        <span>Academic</span>
-                        <h4>Midterm Examination Schedule</h4>
-                        <small>October 12, 2026</small>
+                        <span><?= htmlspecialchars(
+                            $notice['notice_type'] ?: 'General',
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?></span>
+                        <h4><?= htmlspecialchars(
+                            $notice['title'],
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?></h4>
+                        <small><?= htmlspecialchars(
+                            date(
+                                'M d, Y',
+                                strtotime($notice['deadline'] ?: $notice['created_at'])
+                            ),
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?></small>
                     </div>
 
                     <strong>→</strong>
 
                 </div>
+                </a>
+                <?php endforeach; ?>
 
-
-                <div class="notice-list-item">
-
-                    <div class="list-icon">📢</div>
-
-                    <div>
-                        <span>General</span>
-                        <h4>University Holiday Notice</h4>
-                        <small>October 18, 2026</small>
+                <?php if (count($homepageNotices) === 1): ?>
+                    <div class="notice-list-item notice-list-empty">
+                        <div class="list-icon">📢</div>
+                        <div>
+                            <span>More updates</span>
+                            <h4>Other notices will appear here</h4>
+                            <small>Check back for new campus announcements.</small>
+                        </div>
                     </div>
-
-                    <strong>→</strong>
-
-                </div>
-
-
-                <div class="notice-list-item">
-
-                    <div class="list-icon">🎓</div>
-
-                    <div>
-                        <span>Academic</span>
-                        <h4>Course Registration Update</h4>
-                        <small>October 22, 2026</small>
-                    </div>
-
-                    <strong>→</strong>
-
-                </div>
+                <?php endif; ?>
 
             </div>
 
+            <a
+                class="notice-card-link featured-notice-link"
+                href="/CampusMate/notice.php?id=<?= (int)$featuredNotice['notice_id'] ?>"
+            >
+                <div class="large-notice-card">
+                    <div class="notice-card-top">
+                        <span class="notice-tag">
+                            <?= htmlspecialchars(
+                                $featuredNotice['notice_type'] ?: 'Important',
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ) ?>
+                        </span>
+                        <span class="notice-date">
+                            <?= htmlspecialchars(
+                                date(
+                                    'M d, Y',
+                                    strtotime(
+                                        $featuredNotice['deadline']
+                                            ?: $featuredNotice['created_at']
+                                    )
+                                ),
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ) ?>
+                        </span>
+                    </div>
+
+                    <div class="notice-big-icon">📢</div>
+
+                    <h3><?= htmlspecialchars(
+                        $featuredNotice['title'],
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ) ?></h3>
+
+                    <p>
+                        <?= nl2br(htmlspecialchars(
+                            $featuredNotice['description'],
+                            ENT_QUOTES,
+                            'UTF-8'
+                        )) ?>
+                    </p>
+
+                    <span class="notice-date">
+                        Published
+                        <?= htmlspecialchars(
+                            date('M d, Y', strtotime($featuredNotice['created_at'])),
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>
+                    </span>
+                </div>
+            </a>
+
+            <?php else: ?>
+                <div class="large-notice-card">
+                    <div class="notice-big-icon">📢</div>
+                    <h3>No notices yet</h3>
+                    <p>New campus announcements will appear here.</p>
+                </div>
+            <?php endif; ?>
+
+        </div>
+
+        <div class="notice-all-link-wrap">
+            <a class="notice-all-link" href="/CampusMate/notices.php">
+                View all notices <span aria-hidden="true">→</span>
+            </a>
         </div>
 
     </div>

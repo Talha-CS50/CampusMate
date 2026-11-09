@@ -13,7 +13,7 @@ $isLoggedIn = isset($_SESSION['student_db_id']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="/CampusMate/assets/css/style.css">
+    <link rel="stylesheet" href="/CampusMate/assets/css/style.css?v=20261110-notice-layout-4">
 
     <title>Campus Mate</title>
 </head>
@@ -49,7 +49,7 @@ $isLoggedIn = isset($_SESSION['student_db_id']);
                 Features
             </a>
 
-            <a href="/CampusMate/#notices">
+            <a href="/CampusMate/notices.php">
                 Notices
             </a>
 

@@ -41,7 +41,7 @@
             <h4>Platform</h4>
 
             <a href="#features">Features</a>
-            <a href="#notices">Notices</a>
+            <a href="/CampusMate/notices.php">Notices</a>
             <a href="#opportunities">Opportunities</a>
             <a href="#">Campus Issues</a>
 
