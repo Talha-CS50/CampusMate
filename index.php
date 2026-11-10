@@ -322,7 +322,7 @@ include 'includes/header.php';
                 <?php foreach (array_slice($homepageNotices, 1) as $notice): ?>
                 <a
                     class="notice-card-link"
-                    href="/CampusMate/notice.php?id=<?= (int)$notice['notice_id'] ?>"
+                    href="/CampusMate/student/notices.php?id=<?= (int)$notice['notice_id'] ?>"
                 >
                 <div class="notice-list-item">
 
@@ -370,7 +370,7 @@ include 'includes/header.php';
 
             <a
                 class="notice-card-link featured-notice-link"
-                href="/CampusMate/notice.php?id=<?= (int)$featuredNotice['notice_id'] ?>"
+                href="/CampusMate/student/notices.php?id=<?= (int)$featuredNotice['notice_id'] ?>"
             >
                 <div class="large-notice-card">
                     <div class="notice-card-top">
@@ -434,7 +434,7 @@ include 'includes/header.php';
         </div>
 
         <div class="notice-all-link-wrap">
-            <a class="notice-all-link" href="/CampusMate/notices.php">
+            <a class="notice-all-link" href="/CampusMate/student/notices.php">
                 View all notices <span aria-hidden="true">→</span>
             </a>
         </div>

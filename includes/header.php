@@ -49,7 +49,7 @@ $isLoggedIn = isset($_SESSION['student_db_id']);
                 Features
             </a>
 
-            <a href="/CampusMate/notices.php">
+            <a href="/CampusMate/student/notices.php">
                 Notices
             </a>
 
