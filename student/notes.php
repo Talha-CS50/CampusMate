@@ -27,7 +27,10 @@ function e($value): string
     );
 }
 
-// Fetch notes with course, uploader, and rating information.
+// Search notes by their content or related course/uploader details.
+$search = trim(is_string($_GET['q'] ?? null) ? $_GET['q'] : '');
+$searchPattern = '%' . $search . '%';
+
 $sql = "SELECT
             n.note_id,
             n.title,
@@ -43,10 +46,16 @@ $sql = "SELECT
         FROM notes n
         LEFT JOIN courses c
             ON n.course_id = c.course_id
+        LEFT JOIN departments d
+            ON c.department_id = d.department_id
         LEFT JOIN students s
             ON n.student_db_id = s.student_db_id
         LEFT JOIN note_reviews nr
             ON n.note_id = nr.note_id
+        WHERE (? = '' OR n.title LIKE ? OR n.description LIKE ?
+            OR c.course_name LIKE ? OR c.course_code LIKE ?
+            OR d.department_name LIKE ? OR c.semester LIKE ?
+            OR s.name LIKE ?)
         GROUP BY
             n.note_id,
             n.title,
@@ -59,7 +68,22 @@ $sql = "SELECT
             s.name
         ORDER BY n.created_at DESC";
 
-$result = mysqli_query($conn, $sql);
+$notesStmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_bind_param(
+    $notesStmt,
+    'ssssssss',
+    $search,
+    $searchPattern,
+    $searchPattern,
+    $searchPattern,
+    $searchPattern,
+    $searchPattern,
+    $searchPattern,
+    $searchPattern
+);
+mysqli_stmt_execute($notesStmt);
+$result = mysqli_stmt_get_result($notesStmt);
+$noteCount = mysqli_num_rows($result);
 ?>
 
 <!DOCTYPE html>
@@ -109,6 +133,65 @@ $result = mysqli_query($conn, $sql);
             margin: 0;
             color: #64748b;
             line-height: 1.6;
+        }
+
+        .notes-search {
+            display: flex;
+            gap: 10px;
+            margin: 22px 0;
+        }
+
+        .notes-search input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        .notes-search input:focus {
+            border-color: #1d4ed8;
+            outline: 3px solid rgba(29, 78, 216, 0.15);
+        }
+
+        .notes-search button,
+        .notes-search-clear {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 8px;
+            background: #1d4ed8;
+            color: #fff;
+            font: inherit;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .notes-search-clear {
+            background: #e8eef7;
+            color: #173b70;
+        }
+
+        .notes-result-count {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
         .notes-list {
@@ -356,6 +439,14 @@ $result = mysqli_query($conn, $sql);
         }
 
         @media (max-width: 600px) {
+            .notes-search {
+                flex-wrap: wrap;
+            }
+
+            .notes-search input {
+                flex-basis: 100%;
+            }
+
             .notes-list {
                 grid-template-columns: 1fr;
             }
@@ -414,13 +505,37 @@ if (file_exists($headerPath)) {
         </div>
     </header>
 
+    <form class="notes-search" method="GET" action="notes.php" role="search">
+        <label class="visually-hidden" for="notes-search-input">Search study notes</label>
+        <input
+            id="notes-search-input"
+            type="search"
+            name="q"
+            value="<?= e($search) ?>"
+            placeholder="Search title, course, department, semester, or uploader..."
+        >
+        <button type="submit">Search</button>
+        <?php if ($search !== ''): ?>
+            <a class="notes-search-clear" href="notes.php">Clear</a>
+        <?php endif; ?>
+    </form>
+
+    <p class="notes-result-count" aria-live="polite">
+        <?= $noteCount ?> <?= $noteCount === 1 ? 'note' : 'notes' ?>
+        <?= $search !== '' ? 'found' : 'available' ?>
+    </p>
+
     <section class="notes-list">
 
-        <?php if (mysqli_num_rows($result) === 0): ?>
+        <?php if ($noteCount === 0): ?>
 
             <div class="empty-message">
-                <h3>No notes available yet</h3>
-                <p>Uploaded notes will appear here.</p>
+                <h3><?= $search !== '' ? 'No matching notes found' : 'No notes available yet' ?></h3>
+                <p>
+                    <?= $search !== ''
+                        ? 'Try another title, course, department, semester, or uploader name.'
+                        : 'Uploaded notes will appear here.' ?>
+                </p>
             </div>
 
         <?php else: ?>
