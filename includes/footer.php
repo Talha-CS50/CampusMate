@@ -41,9 +41,9 @@
             <h4>Platform</h4>
 
             <a href="#features">Features</a>
-            <a href="/CampusMate/student/notices.php">Notices</a>
-            <a href="#opportunities">Opportunities</a>
-            <a href="#">Campus Issues</a>
+            <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">Notices</a>
+            <a href="<?= htmlspecialchars($opportunitiesUrl, ENT_QUOTES, 'UTF-8') ?>">Opportunities</a>
+            <a href="<?= $isLoggedIn ? '/CampusMate/#features' : htmlspecialchars(campusMateStudentLoginUrl('campus-issues'), ENT_QUOTES, 'UTF-8') ?>">Campus Issues</a>
 
         </div>
 
@@ -53,10 +53,10 @@
 
             <h4>Resources</h4>
 
-            <a href="#">Note Sharing</a>
-            <a href="#">Search Notes</a>
-            <a href="#">Scholarships</a>
-            <a href="#">Career Opportunities</a>
+            <a href="<?= $isLoggedIn ? '/CampusMate/student/notes.php' : htmlspecialchars(campusMateStudentLoginUrl('notes'), ENT_QUOTES, 'UTF-8') ?>">Note Sharing</a>
+            <a href="<?= $isLoggedIn ? '/CampusMate/student/notes.php' : htmlspecialchars(campusMateStudentLoginUrl('notes'), ENT_QUOTES, 'UTF-8') ?>">Search Notes</a>
+            <a href="<?= htmlspecialchars($opportunitiesUrl, ENT_QUOTES, 'UTF-8') ?>">Scholarships</a>
+            <a href="<?= htmlspecialchars($opportunitiesUrl, ENT_QUOTES, 'UTF-8') ?>">Career Opportunities</a>
 
         </div>
 

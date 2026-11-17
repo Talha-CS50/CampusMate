@@ -1,7 +1,14 @@
 
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/includes/student_auth.php';
 require_once __DIR__ . '/config/db.php';
 
+$isLoggedIn = campusMateHasAccess();
+$homepageNotices = [];
 $homepageNoticesResult = mysqli_query(
     $conn,
     'SELECT notice_id, title, description, notice_type, deadline, created_at
@@ -9,7 +16,6 @@ $homepageNoticesResult = mysqli_query(
      ORDER BY created_at DESC
      LIMIT 4'
 );
-$homepageNotices = [];
 while ($homepageNotice = mysqli_fetch_assoc($homepageNoticesResult)) {
     $homepageNotices[] = $homepageNotice;
 }
@@ -179,7 +185,7 @@ include 'includes/header.php';
                     notes and resources.
                 </p>
 
-                <a href="/CampusMate/student/notes.php">
+                <a href="<?= $isLoggedIn ? '/CampusMate/student/notes.php' : htmlspecialchars(campusMateStudentLoginUrl('notes'), ENT_QUOTES, 'UTF-8') ?>">
                     Explore Notes →
                 </a>
 
@@ -199,7 +205,7 @@ include 'includes/header.php';
                     semester and topic filters.
                 </p>
 
-                <a href="/CampusMate/student/notes.php">
+                <a href="<?= $isLoggedIn ? '/CampusMate/student/notes.php' : htmlspecialchars(campusMateStudentLoginUrl('notes'), ENT_QUOTES, 'UTF-8') ?>">
                     Browse Notes →
                 </a>
 
@@ -219,7 +225,7 @@ include 'includes/header.php';
                     notices and upcoming deadlines.
                 </p>
 
-                <a href="#notices">
+                <a href="<?= $isLoggedIn ? '#notices' : htmlspecialchars(campusMateStudentLoginUrl('notices'), ENT_QUOTES, 'UTF-8') ?>">
                     View Notices →
                 </a>
 
@@ -239,7 +245,7 @@ include 'includes/header.php';
                     that match your career goals.
                 </p>
 
-                <a href="#opportunities">
+                <a href="<?= $isLoggedIn ? '#opportunities' : htmlspecialchars(campusMateStudentLoginUrl('opportunities'), ENT_QUOTES, 'UTF-8') ?>">
                     Explore Opportunities →
                 </a>
 
@@ -259,7 +265,7 @@ include 'includes/header.php';
                     with fellow students.
                 </p>
 
-                <a href="/CampusMate/student/notes.php">
+                <a href="<?= $isLoggedIn ? '/CampusMate/student/notes.php' : htmlspecialchars(campusMateStudentLoginUrl('notes'), ENT_QUOTES, 'UTF-8') ?>">
                     Explore Notes →
                 </a>
 
@@ -279,7 +285,7 @@ include 'includes/header.php';
                     their progress easily.
                 </p>
 
-                <a href="/CampusMate/student/login.php">
+                <a href="<?= $isLoggedIn ? '/CampusMate/#features' : htmlspecialchars(campusMateStudentLoginUrl('campus-issues'), ENT_QUOTES, 'UTF-8') ?>">
                     Login to Report →
                 </a>
 
@@ -322,7 +328,9 @@ include 'includes/header.php';
                 <?php foreach (array_slice($homepageNotices, 1) as $notice): ?>
                 <a
                     class="notice-card-link"
-                    href="/CampusMate/student/notices.php?id=<?= (int)$notice['notice_id'] ?>"
+                    href="<?= $isLoggedIn
+                        ? '/CampusMate/student/notices.php?id=' . (int)$notice['notice_id']
+                        : htmlspecialchars(campusMateStudentLoginUrl('notices'), ENT_QUOTES, 'UTF-8') ?>"
                 >
                 <div class="notice-list-item">
 
@@ -370,7 +378,9 @@ include 'includes/header.php';
 
             <a
                 class="notice-card-link featured-notice-link"
-                href="/CampusMate/student/notices.php?id=<?= (int)$featuredNotice['notice_id'] ?>"
+                href="<?= $isLoggedIn
+                    ? '/CampusMate/student/notices.php?id=' . (int)$featuredNotice['notice_id']
+                    : htmlspecialchars(campusMateStudentLoginUrl('notices'), ENT_QUOTES, 'UTF-8') ?>"
             >
                 <div class="large-notice-card">
                     <div class="notice-card-top">
@@ -434,8 +444,12 @@ include 'includes/header.php';
         </div>
 
         <div class="notice-all-link-wrap">
-            <a class="notice-all-link" href="/CampusMate/student/notices.php">
-                View all notices <span aria-hidden="true">→</span>
+            <a
+                class="notice-all-link"
+                href="<?= $isLoggedIn ? '/CampusMate/student/notices.php' : htmlspecialchars(campusMateStudentLoginUrl('notices'), ENT_QUOTES, 'UTF-8') ?>"
+            >
+                <?= $isLoggedIn ? 'View all notices' : 'Log in to view notices' ?>
+                <span aria-hidden="true">→</span>
             </a>
         </div>
 
@@ -490,7 +504,7 @@ include 'includes/header.php';
                     <span>⏳ 12 days left</span>
                 </div>
 
-                <a href="#opportunities" class="opportunity-btn">
+                <a href="<?= $isLoggedIn ? '#opportunities' : htmlspecialchars(campusMateStudentLoginUrl('opportunities'), ENT_QUOTES, 'UTF-8') ?>" class="opportunity-btn">
                     View Opportunity →
                 </a>
 
@@ -518,7 +532,7 @@ include 'includes/header.php';
                     <span>⏳ 20 days left</span>
                 </div>
 
-                <a href="#opportunities" class="opportunity-btn">
+                <a href="<?= $isLoggedIn ? '#opportunities' : htmlspecialchars(campusMateStudentLoginUrl('opportunities'), ENT_QUOTES, 'UTF-8') ?>" class="opportunity-btn">
                     View Opportunity →
                 </a>
 
@@ -544,7 +558,7 @@ include 'includes/header.php';
                     <span>⏳ 8 days left</span>
                 </div>
 
-                <a href="#opportunities" class="opportunity-btn">
+                <a href="<?= $isLoggedIn ? '#opportunities' : htmlspecialchars(campusMateStudentLoginUrl('opportunities'), ENT_QUOTES, 'UTF-8') ?>" class="opportunity-btn">
                     View Opportunity →
                 </a>
 

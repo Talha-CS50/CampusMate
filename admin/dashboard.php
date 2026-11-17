@@ -526,7 +526,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
                                 <td><?= e(date('d M Y', strtotime($note['created_at']))) ?></td>
                                 <td>
                                     <div class="row-actions">
-                                        <a class="button button-muted" href="../student/<?= e(ltrim($note['file_path'], '/')) ?>" target="_blank" rel="noopener">View PDF</a>
+                                        <a class="button button-muted" href="../student/view_note.php?id=<?= (int)$note['note_id'] ?>" target="_blank" rel="noopener">View PDF</a>
                                         <form method="POST" action="dashboard.php#notes" onsubmit="return confirm('Delete this note and its review/download history?');">
                                             <input type="hidden" name="csrf_token" value="<?= e($_SESSION['admin_dashboard_csrf']) ?>">
                                             <input type="hidden" name="action" value="delete_note">

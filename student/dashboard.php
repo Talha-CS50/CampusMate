@@ -1,11 +1,7 @@
 <?php
 
-session_start();
-
-if (!isset($_SESSION["student_db_id"])) {
-    header("Location: login.php");
-    exit;
-}
+require_once __DIR__ . '/../includes/student_auth.php';
+campusMateRequireStudent('dashboard');
 
 require_once "../config/db.php";
 
@@ -63,6 +59,7 @@ $all_notes_count = (int) $all_notes_data["total_notes"];
 $recent_query = mysqli_prepare(
     $conn,
     "SELECT
+        n.note_id,
         n.title,
         n.faculty_name,
         n.file_path,
@@ -597,9 +594,7 @@ include "../includes/header.php";
 
                                 <td>
                                     <a
-                                        href="../<?= htmlspecialchars(
-                                            ltrim($note["file_path"], "/")
-                                        ) ?>"
+                                        href="view_note.php?id=<?= (int)$note["note_id"] ?>"
                                         target="_blank"
                                         rel="noopener"
                                     >

@@ -1,7 +1,6 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/../includes/student_auth.php';
+campusMateRequireAccess('notes');
 
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
@@ -12,9 +11,10 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once __DIR__ . '/../config/db.php';
 
 $studentId = (int)($_SESSION['student_db_id'] ?? 0);
-$isLoggedIn = $studentId > 0;
+$isStudentLoggedIn = $studentId > 0;
+$isAdminLoggedIn = (int)($_SESSION['admin_id'] ?? 0) > 0;
 
-if ($isLoggedIn && empty($_SESSION['review_csrf_token'])) {
+if ($isStudentLoggedIn && empty($_SESSION['review_csrf_token'])) {
     $_SESSION['review_csrf_token'] = bin2hex(random_bytes(32));
 }
 
@@ -569,7 +569,7 @@ if (file_exists($headerPath)) {
                 $myReview = null;
                 $myReviewStmt = null;
 
-                if ($isLoggedIn && $uploaderId !== $studentId) {
+                if ($isStudentLoggedIn && $uploaderId !== $studentId) {
                     $myReviewSql = "SELECT rating, review_text
                                     FROM note_reviews
                                     WHERE note_id = ?
@@ -588,7 +588,6 @@ if (file_exists($headerPath)) {
                     $myReview = mysqli_fetch_assoc($myReviewResult) ?: null;
                 }
 
-                $pdfPath = (string)$note['file_path'];
                 ?>
 
                 <article class="note-card">
@@ -658,7 +657,7 @@ if (file_exists($headerPath)) {
                     <div class="note-actions">
                         <a
                             class="btn btn-primary"
-                            href="<?= e($pdfPath) ?>"
+                            href="view_note.php?id=<?= $noteId ?>"
                             target="_blank"
                             rel="noopener"
                         >
@@ -667,8 +666,7 @@ if (file_exists($headerPath)) {
 
                         <a
                             class="btn btn-secondary"
-                            href="<?= e($pdfPath) ?>"
-                            download
+                            href="view_note.php?id=<?= $noteId ?>&amp;download=1"
                         >
                             Download PDF
                         </a>
@@ -735,12 +733,13 @@ if (file_exists($headerPath)) {
                     </details>
 
                     <!-- Only logged-in students can access the review form. -->
-                    <?php if (!$isLoggedIn): ?>
+                    <?php if (!$isStudentLoggedIn): ?>
 
                         <div class="review-details">
                             <p class="form-note">
-                                Want to rate or review this note?
-                                <a href="../login.php">Log in</a> first.
+                                <?= $isAdminLoggedIn
+                                    ? 'Admin accounts can browse notes but cannot submit student reviews.'
+                                    : 'Want to rate or review this note? <a href="../login.php">Log in</a> first.' ?>
                             </p>
                         </div>
 

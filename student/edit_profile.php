@@ -1,12 +1,7 @@
 
 <?php
-session_start();
-
-// Check whether the student is logged in
-if (!isset($_SESSION["student_db_id"])) {
-    header("Location: login.php");
-    exit;
-}
+require_once __DIR__ . '/../includes/student_auth.php';
+campusMateRequireStudent('profile');
 
 require "../config/db.php";
 

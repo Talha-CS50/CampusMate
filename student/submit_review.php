@@ -4,21 +4,17 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../config/db.php';
-
 // Allow POST requests only.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: notes.php');
     exit;
 }
 
-// Check whether the student is logged in.
-$studentId = (int)($_SESSION['student_db_id'] ?? 0);
+require_once __DIR__ . '/../includes/student_auth.php';
+campusMateRequireStudent('notes');
 
-if ($studentId <= 0) {
-    header('Location: ../login.php');
-    exit;
-}
+$studentId = (int)$_SESSION['student_db_id'];
+require_once __DIR__ . '/../config/db.php';
 
 // Validate the CSRF token.
 $sessionToken = $_SESSION['review_csrf_token'] ?? '';

@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../includes/student_auth.php';
+campusMateRequireAccess('notices');
+
 require_once __DIR__ . '/../config/db.php';
 
 function e($value): string

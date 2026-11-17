@@ -1,10 +1,6 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['student_db_id'])) {
-    header("Location: login.php");
-    exit();
-}
+require_once __DIR__ . '/../includes/student_auth.php';
+campusMateRequireStudent('upload-note');
 
 require_once __DIR__ . "/../config/db.php";
 

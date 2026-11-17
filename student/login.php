@@ -2,7 +2,17 @@
 
 session_start();
 
+require_once __DIR__ . "/../includes/student_auth.php";
 require "../config/db.php";
+
+$redirectDestination = $_GET["redirect"] ?? $_POST["redirect"] ?? "dashboard";
+$redirects = campusMateStudentRedirects();
+if (
+    !is_string($redirectDestination)
+    || !array_key_exists($redirectDestination, $redirects)
+) {
+    $redirectDestination = "dashboard";
+}
 
 $message = "";
 $message_type = "";
@@ -72,7 +82,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION["student_name"] = $student["name"];
                 $_SESSION["student_email"] = $student["email"];
 
-                header("Location: dashboard.php");
+                header(
+                    "Location: "
+                    . campusMateStudentRedirectTarget($redirectDestination)
+                );
                 exit;
 
             } else {
@@ -211,6 +224,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                       action=""
                       class="auth-form">
 
+                    <input
+                        type="hidden"
+                        name="redirect"
+                        value="<?= htmlspecialchars($redirectDestination, ENT_QUOTES, "UTF-8") ?>"
+                    >
 
                     <div class="form-group">
 

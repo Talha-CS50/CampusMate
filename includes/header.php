@@ -3,7 +3,17 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$isLoggedIn = isset($_SESSION['student_db_id']);
+require_once __DIR__ . '/student_auth.php';
+
+$isStudentLoggedIn = (int)($_SESSION['student_db_id'] ?? 0) > 0;
+$isAdminLoggedIn = (int)($_SESSION['admin_id'] ?? 0) > 0;
+$isLoggedIn = campusMateHasAccess();
+$noticesUrl = $isLoggedIn
+    ? '/CampusMate/student/notices.php'
+    : campusMateStudentLoginUrl('notices');
+$opportunitiesUrl = $isLoggedIn
+    ? '/CampusMate/#opportunities'
+    : campusMateStudentLoginUrl('opportunities');
 ?>
 
 <!DOCTYPE html>
@@ -49,11 +59,11 @@ $isLoggedIn = isset($_SESSION['student_db_id']);
                 Features
             </a>
 
-            <a href="/CampusMate/student/notices.php">
+            <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">
                 Notices
             </a>
 
-            <a href="/CampusMate/#opportunities">
+            <a href="<?= htmlspecialchars($opportunitiesUrl, ENT_QUOTES, 'UTF-8') ?>">
                 Opportunities
             </a>
 
@@ -62,7 +72,17 @@ $isLoggedIn = isset($_SESSION['student_db_id']);
         <!-- Buttons -->
         <div class="nav-buttons">
 
-            <?php if ($isLoggedIn): ?>
+            <?php if ($isAdminLoggedIn): ?>
+
+                <a href="/CampusMate/admin/dashboard.php" class="login-btn">
+                    Admin Dashboard
+                </a>
+
+                <a href="/CampusMate/admin/logout.php" class="login-btn">
+                    Logout
+                </a>
+
+            <?php elseif ($isStudentLoggedIn): ?>
 
                 <a href="/CampusMate/student/dashboard.php" class="login-btn">
                     Dashboard

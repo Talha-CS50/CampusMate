@@ -1,13 +1,7 @@
 <?php
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (!isset($_SESSION["student_db_id"])) {
-    header("Location: login.php");
-    exit;
-}
+require_once __DIR__ . '/../includes/student_auth.php';
+campusMateRequireStudent('profile');
 
 require_once "../config/db.php";
 
@@ -834,9 +828,7 @@ include "../includes/header.php";
 
                                 <a
                                     class="profile-button"
-                                    href="../<?= htmlspecialchars(
-                                        ltrim($note["file_path"], "/")
-                                    ) ?>"
+                                    href="view_note.php?id=<?= (int)$note["note_id"] ?>"
                                     target="_blank"
                                     rel="noopener"
                                 >
