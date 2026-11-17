@@ -301,7 +301,7 @@ include 'includes/header.php';
                     their progress easily.
                 </p>
 
-                <a href="<?= $isLoggedIn ? '/CampusMate/#features' : htmlspecialchars(campusMateStudentLoginUrl('campus-issues'), ENT_QUOTES, 'UTF-8') ?>">
+                <a href="<?= $isLoggedIn ? '/CampusMate/student/campus_issues.php' : htmlspecialchars(campusMateStudentLoginUrl('campus-issues'), ENT_QUOTES, 'UTF-8') ?>">
                     Login to Report →
                 </a>
 

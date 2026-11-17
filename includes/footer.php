@@ -43,7 +43,7 @@
             <a href="#features">Features</a>
             <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">Notices</a>
             <a href="<?= htmlspecialchars($opportunitiesUrl, ENT_QUOTES, 'UTF-8') ?>">Opportunities</a>
-            <a href="<?= $isLoggedIn ? '/CampusMate/#features' : htmlspecialchars(campusMateStudentLoginUrl('campus-issues'), ENT_QUOTES, 'UTF-8') ?>">Campus Issues</a>
+            <a href="<?= htmlspecialchars($campusIssuesUrl, ENT_QUOTES, 'UTF-8') ?>">Campus Issues</a>
 
         </div>
 

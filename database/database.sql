@@ -174,6 +174,9 @@ CREATE TABLE campus_issues (
     location VARCHAR(150),
     status ENUM('Pending', 'In Progress', 'Resolved')
         DEFAULT 'Pending',
+    approval_status ENUM('Pending', 'Approved', 'Rejected')
+        NOT NULL DEFAULT 'Pending',
+    admin_feedback TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,

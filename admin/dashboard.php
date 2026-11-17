@@ -257,6 +257,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 : 'Opportunity was not found.';
             redirectDashboard('opportunities');
         }
+    } elseif ($action === 'review_campus_issue') {
+        $issueId = filter_var($_POST['issue_id'] ?? '', FILTER_VALIDATE_INT);
+        $approvalStatus = $_POST['approval_status'] ?? '';
+        $approvalStatus = is_string($approvalStatus) ? $approvalStatus : '';
+        $adminFeedback = trim(
+            is_string($_POST['admin_feedback'] ?? null)
+                ? $_POST['admin_feedback']
+                : ''
+        );
+
+        if (!$issueId || $issueId < 1) {
+            $error = 'Invalid campus issue selected.';
+        } elseif (!in_array($approvalStatus, ['Approved', 'Rejected'], true)) {
+            $error = 'Select a valid review decision.';
+        } elseif (strlen($adminFeedback) > 5000) {
+            $error = 'Admin feedback must be 5000 characters or fewer.';
+        } else {
+            $stmt = mysqli_prepare(
+                $conn,
+                'SELECT issue_id FROM campus_issues WHERE issue_id = ? LIMIT 1'
+            );
+            mysqli_stmt_bind_param($stmt, 'i', $issueId);
+            mysqli_stmt_execute($stmt);
+            $issueExists = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+            mysqli_stmt_close($stmt);
+
+            if (!$issueExists) {
+                $error = 'Campus issue was not found.';
+            } else {
+                $adminFeedback = $adminFeedback === '' ? null : $adminFeedback;
+                $stmt = mysqli_prepare(
+                    $conn,
+                    "UPDATE campus_issues
+                     SET approval_status = ?, admin_feedback = ?,
+                         status = CASE WHEN ? = 'Approved' THEN status ELSE 'Pending' END
+                     WHERE issue_id = ?"
+                );
+                mysqli_stmt_bind_param(
+                    $stmt,
+                    'sssi',
+                    $approvalStatus,
+                    $adminFeedback,
+                    $approvalStatus,
+                    $issueId
+                );
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+                $_SESSION['admin_dashboard_flash'] =
+                    'Campus issue review updated.';
+                redirectDashboard('campus-issues');
+            }
+        }
+    } elseif ($action === 'update_campus_issue_status') {
+        $issueId = filter_var($_POST['issue_id'] ?? '', FILTER_VALIDATE_INT);
+        $issueStatus = $_POST['status'] ?? '';
+        $issueStatus = is_string($issueStatus) ? $issueStatus : '';
+
+        if (!$issueId || $issueId < 1) {
+            $error = 'Invalid campus issue selected.';
+        } elseif (!in_array($issueStatus, ['Pending', 'In Progress', 'Resolved'], true)) {
+            $error = 'Select a valid progress status.';
+        } else {
+            $stmt = mysqli_prepare(
+                $conn,
+                "SELECT issue_id
+                 FROM campus_issues
+                 WHERE issue_id = ? AND approval_status = 'Approved'
+                 LIMIT 1"
+            );
+            mysqli_stmt_bind_param($stmt, 'i', $issueId);
+            mysqli_stmt_execute($stmt);
+            $issueExists = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+            mysqli_stmt_close($stmt);
+
+            if (!$issueExists) {
+                $error = 'Only approved campus issues can have their progress updated.';
+            } else {
+                $stmt = mysqli_prepare(
+                    $conn,
+                    "UPDATE campus_issues
+                     SET status = ?
+                     WHERE issue_id = ? AND approval_status = 'Approved'"
+                );
+                mysqli_stmt_bind_param($stmt, 'si', $issueStatus, $issueId);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+                $_SESSION['admin_dashboard_flash'] =
+                    'Campus issue progress updated.';
+                redirectDashboard('campus-issues');
+            }
+        }
     } elseif ($action === 'delete_note') {
         $noteId = filter_var($_POST['note_id'] ?? '', FILTER_VALIDATE_INT);
         if (!$noteId || $noteId < 1) {
@@ -381,6 +472,21 @@ $opportunitiesResult = mysqli_query(
      ORDER BY o.created_at DESC'
 );
 
+$campusIssuesResult = mysqli_query(
+    $conn,
+    "SELECT i.issue_id, i.title, i.description, i.category, i.location, i.status,
+            i.approval_status, i.admin_feedback, i.created_at, i.updated_at,
+            s.name AS student_name, s.student_id
+     FROM campus_issues i
+     LEFT JOIN students s ON i.student_db_id = s.student_db_id
+     ORDER BY CASE i.approval_status
+                  WHEN 'Pending' THEN 0
+                  WHEN 'Approved' THEN 1
+                  ELSE 2
+              END,
+              i.created_at DESC"
+);
+
 $noteSearch = trim(is_string($_GET['note_search'] ?? null) ? $_GET['note_search'] : '');
 $noteSearchPattern = '%' . $noteSearch . '%';
 $notesStmt = mysqli_prepare(
@@ -499,6 +605,8 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
         }
         .button-muted { background: #e8eef7; color: #173b70; }
         .button-danger { background: #fee2e2; color: #b91c1c; }
+        .issue-approve { background: #dcfce7; color: #166534; }
+        .issue-reject { background: #fee2e2; color: #b91c1c; }
         .form-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
@@ -530,6 +638,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
             <a href="#overview">Overview</a>
             <a href="#notices">Notices</a>
             <a href="#opportunities">Opportunities</a>
+            <a href="#campus-issues">Campus issues</a>
             <a href="#notes">Notes</a>
             <a href="../index.php">View website</a>
             <a class="logout" href="logout.php">Logout</a>
@@ -539,7 +648,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
     <main>
         <section class="welcome" id="overview">
             <h1>Welcome, <?= $adminName ?>!</h1>
-            <p>Manage notices and opportunities, review shared study notes, and monitor platform activity.</p>
+            <p>Manage notices and opportunities, moderate campus issue reports, review study notes, and monitor platform activity.</p>
         </section>
 
         <?php if ($flash): ?>
@@ -815,6 +924,106 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
                                             <button class="button-danger" type="submit">Delete</button>
                                         </form>
                                     </div>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel" id="campus-issues">
+            <h2>Campus issue reports</h2>
+            <p class="panel-intro">
+                New reports stay private until approved. Approved reports appear to signed-in users.
+            </p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Issue</th>
+                            <th>Submitted by</th>
+                            <th>Submitted</th>
+                            <th>Review decision</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (mysqli_num_rows($campusIssuesResult) === 0): ?>
+                        <tr><td colspan="5" class="muted">No campus issue reports yet.</td></tr>
+                    <?php else: ?>
+                        <?php while ($issue = mysqli_fetch_assoc($campusIssuesResult)): ?>
+                            <tr>
+                                <td>
+                                    <span class="note-title"><?= e($issue['title']) ?></span>
+                                    <p>
+                                        <?= e($issue['category'] ?: 'Uncategorized') ?>
+                                        <?php if (!empty($issue['location'])): ?>
+                                            · <?= e($issue['location']) ?>
+                                        <?php endif; ?>
+                                    </p>
+                                    <p><?= nl2br(e($issue['description'])) ?></p>
+                                </td>
+                                <td>
+                                    <?= e($issue['student_name'] ?: 'Student') ?>
+                                    <p><?= e($issue['student_id'] ?: '') ?></p>
+                                </td>
+                                <td><?= e(date('d M Y', strtotime($issue['created_at']))) ?></td>
+                                <td>
+                                    <form method="POST" action="dashboard.php#campus-issues">
+                                        <input type="hidden" name="csrf_token" value="<?= e($_SESSION['admin_dashboard_csrf']) ?>">
+                                        <input type="hidden" name="action" value="review_campus_issue">
+                                        <input type="hidden" name="issue_id" value="<?= (int)$issue['issue_id'] ?>">
+                                        <label for="issue-feedback-<?= (int)$issue['issue_id'] ?>">Feedback for student (optional)</label>
+                                        <textarea
+                                            id="issue-feedback-<?= (int)$issue['issue_id'] ?>"
+                                            name="admin_feedback"
+                                            maxlength="5000"
+                                            placeholder="Reason or update for the student"
+                                        ><?= e($issue['admin_feedback']) ?></textarea>
+                                        <div class="row-actions">
+                                            <button
+                                                class="issue-approve"
+                                                type="submit"
+                                                name="approval_status"
+                                                value="Approved"
+                                            >Approve</button>
+                                            <button
+                                                class="issue-reject"
+                                                type="submit"
+                                                name="approval_status"
+                                                value="Rejected"
+                                            >Reject</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <?php if ($issue['approval_status'] === 'Approved'): ?>
+                                        <form method="POST" action="dashboard.php#campus-issues">
+                                            <input type="hidden" name="csrf_token" value="<?= e($_SESSION['admin_dashboard_csrf']) ?>">
+                                            <input type="hidden" name="action" value="update_campus_issue_status">
+                                            <input type="hidden" name="issue_id" value="<?= (int)$issue['issue_id'] ?>">
+                                            <label for="issue-status-<?= (int)$issue['issue_id'] ?>">Progress</label>
+                                            <select
+                                                id="issue-status-<?= (int)$issue['issue_id'] ?>"
+                                                name="status"
+                                            >
+                                                <?php foreach (['Pending', 'In Progress', 'Resolved'] as $status): ?>
+                                                    <option
+                                                        value="<?= e($status) ?>"
+                                                        <?= $issue['status'] === $status ? 'selected' : '' ?>
+                                                    >
+                                                        <?= e($status) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <button type="submit">Update status</button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="muted">Available after approval</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
