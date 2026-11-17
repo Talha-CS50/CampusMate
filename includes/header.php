@@ -12,7 +12,7 @@ $noticesUrl = $isLoggedIn
     ? '/CampusMate/student/notices.php'
     : campusMateStudentLoginUrl('notices');
 $opportunitiesUrl = $isLoggedIn
-    ? '/CampusMate/#opportunities'
+    ? '/CampusMate/student/opportunities.php'
     : campusMateStudentLoginUrl('opportunities');
 ?>
 

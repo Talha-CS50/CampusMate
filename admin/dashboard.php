@@ -131,6 +131,132 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 : 'Notice was not found.';
             redirectDashboard('notices');
         }
+    } elseif ($action === 'save_opportunity') {
+        $opportunityIdInput = $_POST['opportunity_id'] ?? '';
+        $opportunityId = $opportunityIdInput === ''
+            ? null
+            : filter_var($opportunityIdInput, FILTER_VALIDATE_INT);
+        $title = trim(is_string($_POST['title'] ?? null) ? $_POST['title'] : '');
+        $type = $_POST['opportunity_type'] ?? '';
+        $type = is_string($type) ? $type : '';
+        $organization = trim(
+            is_string($_POST['organization'] ?? null) ? $_POST['organization'] : ''
+        );
+        $description = trim(
+            is_string($_POST['description'] ?? null) ? $_POST['description'] : ''
+        );
+        $applicationLink = trim(
+            is_string($_POST['application_link'] ?? null)
+                ? $_POST['application_link']
+                : ''
+        );
+        $deadlineInput = trim(
+            is_string($_POST['deadline'] ?? null) ? $_POST['deadline'] : ''
+        );
+        $deadline = validDateOrNull($deadlineInput);
+        $allowedOpportunityTypes = ['Internship', 'Job', 'Scholarship'];
+        $applicationScheme = strtolower(
+            (string)parse_url($applicationLink, PHP_URL_SCHEME)
+        );
+
+        if ($title === '' || strlen($title) > 200) {
+            $error = 'Opportunity title is required and must be 200 characters or fewer.';
+        } elseif (!in_array($type, $allowedOpportunityTypes, true)) {
+            $error = 'Select a valid opportunity type.';
+        } elseif ($organization === '' || strlen($organization) > 150) {
+            $error = 'Organization is required and must be 150 characters or fewer.';
+        } elseif (strlen($applicationLink) > 255) {
+            $error = 'Application link must be 255 characters or fewer.';
+        } elseif (
+            $applicationLink !== ''
+            && (
+                filter_var($applicationLink, FILTER_VALIDATE_URL) === false
+                || !in_array($applicationScheme, ['http', 'https'], true)
+            )
+        ) {
+            $error = 'Enter a valid http or https application link.';
+        } elseif ($deadline === false) {
+            $error = 'Enter a valid opportunity deadline.';
+        } elseif (
+            $opportunityId === false
+            || ($opportunityId !== null && $opportunityId < 1)
+        ) {
+            $error = 'Invalid opportunity selected.';
+        } else {
+            $description = $description === '' ? null : $description;
+            $applicationLink = $applicationLink === '' ? null : $applicationLink;
+
+            if ($opportunityId) {
+                $stmt = mysqli_prepare(
+                    $conn,
+                    'UPDATE opportunities
+                     SET title = ?, `type` = ?, organization = ?, description = ?,
+                         application_link = ?, deadline = ?
+                     WHERE opportunity_id = ?'
+                );
+                mysqli_stmt_bind_param(
+                    $stmt,
+                    'ssssssi',
+                    $title,
+                    $type,
+                    $organization,
+                    $description,
+                    $applicationLink,
+                    $deadline,
+                    $opportunityId
+                );
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+                $_SESSION['admin_dashboard_flash'] =
+                    'Opportunity updated successfully.';
+            } else {
+                $adminId = (int)$_SESSION['admin_id'];
+                $stmt = mysqli_prepare(
+                    $conn,
+                    'INSERT INTO opportunities
+                        (title, `type`, organization, description, application_link,
+                         deadline, admin_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)'
+                );
+                mysqli_stmt_bind_param(
+                    $stmt,
+                    'ssssssi',
+                    $title,
+                    $type,
+                    $organization,
+                    $description,
+                    $applicationLink,
+                    $deadline,
+                    $adminId
+                );
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+                $_SESSION['admin_dashboard_flash'] =
+                    'Opportunity published successfully.';
+            }
+            redirectDashboard('opportunities');
+        }
+    } elseif ($action === 'delete_opportunity') {
+        $opportunityId = filter_var(
+            $_POST['opportunity_id'] ?? '',
+            FILTER_VALIDATE_INT
+        );
+        if (!$opportunityId || $opportunityId < 1) {
+            $error = 'Invalid opportunity selected.';
+        } else {
+            $stmt = mysqli_prepare(
+                $conn,
+                'DELETE FROM opportunities WHERE opportunity_id = ?'
+            );
+            mysqli_stmt_bind_param($stmt, 'i', $opportunityId);
+            mysqli_stmt_execute($stmt);
+            $deleted = mysqli_stmt_affected_rows($stmt) === 1;
+            mysqli_stmt_close($stmt);
+            $_SESSION['admin_dashboard_flash'] = $deleted
+                ? 'Opportunity deleted.'
+                : 'Opportunity was not found.';
+            redirectDashboard('opportunities');
+        }
     } elseif ($action === 'delete_note') {
         $noteId = filter_var($_POST['note_id'] ?? '', FILTER_VALIDATE_INT);
         if (!$noteId || $noteId < 1) {
@@ -205,6 +331,26 @@ if ($editNoticeId && $editNoticeId > 0) {
     mysqli_stmt_close($stmt);
 }
 
+$editingOpportunity = null;
+$editOpportunityId = filter_input(
+    INPUT_GET,
+    'edit_opportunity',
+    FILTER_VALIDATE_INT
+);
+if ($editOpportunityId && $editOpportunityId > 0) {
+    $stmt = mysqli_prepare(
+        $conn,
+        'SELECT opportunity_id, title, `type`, organization, description,
+                application_link, deadline
+         FROM opportunities
+         WHERE opportunity_id = ?'
+    );
+    mysqli_stmt_bind_param($stmt, 'i', $editOpportunityId);
+    mysqli_stmt_execute($stmt);
+    $editingOpportunity = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+    mysqli_stmt_close($stmt);
+}
+
 $stats = [];
 foreach ([
     'Students' => 'students',
@@ -224,6 +370,15 @@ $noticesResult = mysqli_query(
      FROM notices n
      LEFT JOIN admins a ON n.admin_id = a.admin_id
      ORDER BY n.created_at DESC'
+);
+
+$opportunitiesResult = mysqli_query(
+    $conn,
+    'SELECT o.opportunity_id, o.title, o.`type`, o.organization, o.description,
+            o.application_link, o.deadline, o.created_at, a.name AS admin_name
+     FROM opportunities o
+     LEFT JOIN admins a ON o.admin_id = a.admin_id
+     ORDER BY o.created_at DESC'
 );
 
 $noteSearch = trim(is_string($_GET['note_search'] ?? null) ? $_GET['note_search'] : '');
@@ -374,6 +529,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
         <nav aria-label="Admin navigation">
             <a href="#overview">Overview</a>
             <a href="#notices">Notices</a>
+            <a href="#opportunities">Opportunities</a>
             <a href="#notes">Notes</a>
             <a href="../index.php">View website</a>
             <a class="logout" href="logout.php">Logout</a>
@@ -383,7 +539,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
     <main>
         <section class="welcome" id="overview">
             <h1>Welcome, <?= $adminName ?>!</h1>
-            <p>Manage campus notices, review shared study notes, and monitor platform activity.</p>
+            <p>Manage notices and opportunities, review shared study notes, and monitor platform activity.</p>
         </section>
 
         <?php if ($flash): ?>
@@ -480,6 +636,182 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
                                             <input type="hidden" name="csrf_token" value="<?= e($_SESSION['admin_dashboard_csrf']) ?>">
                                             <input type="hidden" name="action" value="delete_notice">
                                             <input type="hidden" name="notice_id" value="<?= (int)$notice['notice_id'] ?>">
+                                            <button class="button-danger" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel" id="opportunities">
+            <h2><?= $editingOpportunity ? 'Edit opportunity' : 'Share an opportunity' ?></h2>
+            <p class="panel-intro">Publish internships, jobs, or scholarships for students.</p>
+
+            <?php
+            $formOpportunity = $editingOpportunity ?? [
+                'opportunity_id' => '',
+                'title' => '',
+                'type' => '',
+                'organization' => '',
+                'description' => '',
+                'application_link' => '',
+                'deadline' => '',
+            ];
+            if ($error !== '' && ($_POST['action'] ?? '') === 'save_opportunity') {
+                $postedOpportunity = [];
+                foreach ([
+                    'opportunity_id',
+                    'title',
+                    'opportunity_type',
+                    'organization',
+                    'description',
+                    'application_link',
+                    'deadline',
+                ] as $field) {
+                    $postedOpportunity[$field] = is_string($_POST[$field] ?? null)
+                        ? $_POST[$field]
+                        : '';
+                }
+                $formOpportunity = [
+                    'opportunity_id' => $postedOpportunity['opportunity_id'],
+                    'title' => $postedOpportunity['title'],
+                    'type' => $postedOpportunity['opportunity_type'],
+                    'organization' => $postedOpportunity['organization'],
+                    'description' => $postedOpportunity['description'],
+                    'application_link' => $postedOpportunity['application_link'],
+                    'deadline' => $postedOpportunity['deadline'],
+                ];
+            }
+            ?>
+            <form method="POST" action="dashboard.php#opportunities">
+                <input type="hidden" name="csrf_token" value="<?= e($_SESSION['admin_dashboard_csrf']) ?>">
+                <input type="hidden" name="action" value="save_opportunity">
+                <input type="hidden" name="opportunity_id" value="<?= e($formOpportunity['opportunity_id']) ?>">
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="opportunity-title">Title *</label>
+                        <input
+                            id="opportunity-title"
+                            name="title"
+                            maxlength="200"
+                            required
+                            value="<?= e($formOpportunity['title']) ?>"
+                        >
+                    </div>
+                    <div class="field">
+                        <label for="opportunity-type">Type *</label>
+                        <select id="opportunity-type" name="opportunity_type" required>
+                            <option value="">Select a type</option>
+                            <?php foreach (['Internship', 'Job', 'Scholarship'] as $type): ?>
+                                <option
+                                    value="<?= e($type) ?>"
+                                    <?= $formOpportunity['type'] === $type ? 'selected' : '' ?>
+                                >
+                                    <?= e($type) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="opportunity-organization">Organization *</label>
+                        <input
+                            id="opportunity-organization"
+                            name="organization"
+                            maxlength="150"
+                            required
+                            value="<?= e($formOpportunity['organization']) ?>"
+                        >
+                    </div>
+                    <div class="field">
+                        <label for="opportunity-deadline">Deadline (optional)</label>
+                        <input
+                            id="opportunity-deadline"
+                            type="date"
+                            name="deadline"
+                            value="<?= e($formOpportunity['deadline']) ?>"
+                        >
+                    </div>
+                    <div class="field full">
+                        <label for="opportunity-application-link">Application link (optional)</label>
+                        <input
+                            id="opportunity-application-link"
+                            type="url"
+                            name="application_link"
+                            maxlength="255"
+                            placeholder="https://example.com/apply"
+                            value="<?= e($formOpportunity['application_link']) ?>"
+                        >
+                    </div>
+                    <div class="field full">
+                        <label for="opportunity-description">Description (optional)</label>
+                        <textarea
+                            id="opportunity-description"
+                            name="description"
+                        ><?= e($formOpportunity['description']) ?></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">
+                        <?= !empty($formOpportunity['opportunity_id'])
+                            ? 'Save changes'
+                            : 'Publish opportunity' ?>
+                    </button>
+                    <?php if ($editingOpportunity): ?>
+                        <a class="button button-muted" href="dashboard.php#opportunities">Cancel edit</a>
+                    <?php endif; ?>
+                </div>
+            </form>
+
+            <h2 style="margin-top:28px">Published opportunities</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Opportunity</th>
+                            <th>Type</th>
+                            <th>Deadline</th>
+                            <th>Published</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (mysqli_num_rows($opportunitiesResult) === 0): ?>
+                        <tr><td colspan="5" class="muted">No opportunities published yet.</td></tr>
+                    <?php else: ?>
+                        <?php while ($opportunity = mysqli_fetch_assoc($opportunitiesResult)): ?>
+                            <tr>
+                                <td>
+                                    <span class="note-title"><?= e($opportunity['title']) ?></span>
+                                    <p><?= e($opportunity['organization']) ?></p>
+                                    <?php if (!empty($opportunity['description'])): ?>
+                                        <p><?= nl2br(e($opportunity['description'])) ?></p>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= e($opportunity['type']) ?></td>
+                                <td><?= e($opportunity['deadline'] ?: '—') ?></td>
+                                <td>
+                                    <?= e(date('d M Y', strtotime($opportunity['created_at']))) ?>
+                                    <p>By <?= e($opportunity['admin_name'] ?: 'Admin') ?></p>
+                                </td>
+                                <td>
+                                    <div class="row-actions">
+                                        <a
+                                            class="button button-muted"
+                                            href="dashboard.php?edit_opportunity=<?= (int)$opportunity['opportunity_id'] ?>#opportunities"
+                                        >Edit</a>
+                                        <form
+                                            method="POST"
+                                            action="dashboard.php#opportunities"
+                                            onsubmit="return confirm('Delete this opportunity?');"
+                                        >
+                                            <input type="hidden" name="csrf_token" value="<?= e($_SESSION['admin_dashboard_csrf']) ?>">
+                                            <input type="hidden" name="action" value="delete_opportunity">
+                                            <input type="hidden" name="opportunity_id" value="<?= (int)$opportunity['opportunity_id'] ?>">
                                             <button class="button-danger" type="submit">Delete</button>
                                         </form>
                                     </div>

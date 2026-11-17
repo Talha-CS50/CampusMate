@@ -20,6 +20,22 @@ while ($homepageNotice = mysqli_fetch_assoc($homepageNoticesResult)) {
     $homepageNotices[] = $homepageNotice;
 }
 
+$homepageOpportunitiesResult = mysqli_query(
+    $conn,
+    'SELECT opportunity_id, title, `type`, organization, deadline, created_at
+     FROM opportunities
+     ORDER BY created_at DESC
+     LIMIT 3'
+);
+$homepageOpportunities = [];
+while ($homepageOpportunity = mysqli_fetch_assoc($homepageOpportunitiesResult)) {
+    $homepageOpportunities[] = $homepageOpportunity;
+}
+
+$opportunitiesPageUrl = $isLoggedIn
+    ? '/CampusMate/student/opportunities.php'
+    : campusMateStudentLoginUrl('opportunities');
+
 include 'includes/header.php';
 ?>
 
@@ -245,7 +261,7 @@ include 'includes/header.php';
                     that match your career goals.
                 </p>
 
-                <a href="<?= $isLoggedIn ? '#opportunities' : htmlspecialchars(campusMateStudentLoginUrl('opportunities'), ENT_QUOTES, 'UTF-8') ?>">
+                <a href="<?= htmlspecialchars($opportunitiesPageUrl, ENT_QUOTES, 'UTF-8') ?>">
                     Explore Opportunities →
                 </a>
 
@@ -481,90 +497,70 @@ include 'includes/header.php';
 
 
         <div class="opportunity-grid">
+            <?php if ($homepageOpportunities): ?>
+                <?php foreach ($homepageOpportunities as $opportunity): ?>
+                    <?php $opportunityTypeClass = strtolower($opportunity['type']); ?>
+                    <?php
+                    $opportunityIcon = match ($opportunity['type']) {
+                        'Internship' => '💻',
+                        'Scholarship' => '🎓',
+                        default => '💼',
+                    };
+                    ?>
+                    <article class="opportunity-card">
+                        <div class="opportunity-top">
+                            <span class="opportunity-type <?= htmlspecialchars($opportunityTypeClass, ENT_QUOTES, 'UTF-8') ?>">
+                                <?= htmlspecialchars($opportunity['type'], ENT_QUOTES, 'UTF-8') ?>
+                            </span>
+                            <span class="opportunity-icon" aria-hidden="true"><?= $opportunityIcon ?></span>
+                        </div>
 
+                        <h3><?= htmlspecialchars($opportunity['title'], ENT_QUOTES, 'UTF-8') ?></h3>
+                        <p class="company"><?= htmlspecialchars($opportunity['organization'], ENT_QUOTES, 'UTF-8') ?></p>
 
-            <div class="opportunity-card">
+                        <div class="opportunity-meta">
+                            <span>
+                                <?= $opportunity['deadline']
+                                    ? 'Deadline: ' . htmlspecialchars(
+                                        date('M d, Y', strtotime($opportunity['deadline'])),
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    )
+                                    : 'No deadline' ?>
+                            </span>
+                            <span>
+                                Posted <?= htmlspecialchars(
+                                    date('M d, Y', strtotime($opportunity['created_at'])),
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ) ?>
+                            </span>
+                        </div>
 
-                <div class="opportunity-top">
+                        <a
+                            href="<?= htmlspecialchars($opportunitiesPageUrl, ENT_QUOTES, 'UTF-8') ?>"
+                            class="opportunity-btn"
+                        >
+                            View Opportunity →
+                        </a>
+                    </article>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <article class="opportunity-card">
+                    <div class="opportunity-icon" aria-hidden="true">💼</div>
+                    <h3>No opportunities yet</h3>
+                    <p class="company">New opportunities will appear here.</p>
+                </article>
+            <?php endif; ?>
+        </div>
 
-                    <span class="opportunity-type internship">
-                        Internship
-                    </span>
-
-                    <span class="opportunity-icon">💻</span>
-
-                </div>
-
-                <h3>Software Engineering Intern</h3>
-
-                <p class="company">Tech Company</p>
-
-                <div class="opportunity-meta">
-                    <span>📍 Dhaka</span>
-                    <span>⏳ 12 days left</span>
-                </div>
-
-                <a href="<?= $isLoggedIn ? '#opportunities' : htmlspecialchars(campusMateStudentLoginUrl('opportunities'), ENT_QUOTES, 'UTF-8') ?>" class="opportunity-btn">
-                    View Opportunity →
-                </a>
-
-            </div>
-
-
-            <div class="opportunity-card">
-
-                <div class="opportunity-top">
-
-                    <span class="opportunity-type scholarship">
-                        Scholarship
-                    </span>
-
-                    <span class="opportunity-icon">🎓</span>
-
-                </div>
-
-                <h3>Undergraduate Scholarship</h3>
-
-                <p class="company">Education Foundation</p>
-
-                <div class="opportunity-meta">
-                    <span>🌎 International</span>
-                    <span>⏳ 20 days left</span>
-                </div>
-
-                <a href="<?= $isLoggedIn ? '#opportunities' : htmlspecialchars(campusMateStudentLoginUrl('opportunities'), ENT_QUOTES, 'UTF-8') ?>" class="opportunity-btn">
-                    View Opportunity →
-                </a>
-
-            </div>
-
-
-            <div class="opportunity-card">
-
-                <div class="opportunity-top">
-
-                    <span class="opportunity-type job">Job</span>
-
-                    <span class="opportunity-icon">💼</span>
-
-                </div>
-
-                <h3>Junior Software Engineer</h3>
-
-                <p class="company">Technology Company</p>
-
-                <div class="opportunity-meta">
-                    <span>📍 Remote</span>
-                    <span>⏳ 8 days left</span>
-                </div>
-
-                <a href="<?= $isLoggedIn ? '#opportunities' : htmlspecialchars(campusMateStudentLoginUrl('opportunities'), ENT_QUOTES, 'UTF-8') ?>" class="opportunity-btn">
-                    View Opportunity →
-                </a>
-
-            </div>
-
-
+        <div class="notice-all-link-wrap">
+            <a
+                class="notice-all-link"
+                href="<?= htmlspecialchars($opportunitiesPageUrl, ENT_QUOTES, 'UTF-8') ?>"
+            >
+                View all opportunities <span aria-hidden="true">→</span>
+            </a>
         </div>
 
     </div>

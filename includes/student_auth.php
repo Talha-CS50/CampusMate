@@ -8,7 +8,7 @@ function campusMateStudentRedirects(): array
         'notices' => 'notices.php',
         'upload-note' => 'upload_note.php',
         'profile' => 'profile.php',
-        'opportunities' => '../index.php#opportunities',
+        'opportunities' => 'opportunities.php',
         'campus-issues' => '../index.php#features',
     ];
 }
