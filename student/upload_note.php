@@ -17,6 +17,14 @@ $courses_query = mysqli_query(
 
 if (isset($_GET['uploaded']) && $_GET['uploaded'] == 1) {
     $success = "Your note was uploaded successfully!";
+    $fulfilledRequestCount = filter_input(
+        INPUT_GET,
+        'requests_fulfilled',
+        FILTER_VALIDATE_INT
+    );
+    if ($fulfilledRequestCount && $fulfilledRequestCount > 0) {
+        $success .= " It fulfilled $fulfilledRequestCount matching note request(s).";
+    }
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -180,8 +188,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 if (mysqli_stmt_execute($stmt)) {
                                     mysqli_stmt_close($stmt);
 
+                                    $requestStmt = mysqli_prepare(
+                                        $conn,
+                                        "UPDATE note_requests
+                                         SET status = 'Fulfilled'
+                                         WHERE course_id = ?
+                                           AND status = 'Open'
+                                           AND LOWER(TRIM(requested_title))
+                                               = LOWER(TRIM(?))"
+                                    );
+                                    mysqli_stmt_bind_param(
+                                        $requestStmt,
+                                        'is',
+                                        $course_id,
+                                        $title
+                                    );
+                                    mysqli_stmt_execute($requestStmt);
+                                    $fulfilledRequestCount = mysqli_stmt_affected_rows(
+                                        $requestStmt
+                                    );
+                                    mysqli_stmt_close($requestStmt);
+
                                     header(
-                                        "Location: upload_note.php?uploaded=1"
+                                        "Location: upload_note.php?uploaded=1&requests_fulfilled="
+                                        . $fulfilledRequestCount
                                     );
                                     exit();
 

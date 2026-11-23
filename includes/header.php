@@ -15,9 +15,9 @@ $noticesUrl = $isLoggedIn
 $campusIssuesUrl = $isLoggedIn
     ? '/CampusMate/student/campus_issues.php'
     : campusMateStudentLoginUrl('campus-issues');
-$opportunitiesUrl = $isLoggedIn
-    ? '/CampusMate/student/opportunities.php'
-    : campusMateStudentLoginUrl('opportunities');
+$notesUrl = $isLoggedIn
+    ? '/CampusMate/student/notes.php'
+    : campusMateStudentLoginUrl('notes');
 ?>
 
 <!DOCTYPE html>
@@ -71,8 +71,8 @@ $opportunitiesUrl = $isLoggedIn
                 Campus Issues
             </a>
 
-            <a href="<?= htmlspecialchars($opportunitiesUrl, ENT_QUOTES, 'UTF-8') ?>">
-                Opportunities
+            <a href="<?= htmlspecialchars($notesUrl, ENT_QUOTES, 'UTF-8') ?>">
+                Notes
             </a>
 
         </nav>

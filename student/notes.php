@@ -18,6 +18,9 @@ $isAdminLoggedIn = (int)($_SESSION['admin_id'] ?? 0) > 0;
 if ($isStudentLoggedIn && empty($_SESSION['review_csrf_token'])) {
     $_SESSION['review_csrf_token'] = bin2hex(random_bytes(32));
 }
+if ($isStudentLoggedIn && empty($_SESSION['note_request_csrf_token'])) {
+    $_SESSION['note_request_csrf_token'] = bin2hex(random_bytes(32));
+}
 
 function e($value): string
 {
@@ -27,6 +30,153 @@ function e($value): string
         'UTF-8'
     );
 }
+
+$requestError = '';
+$requestSuccess = '';
+$requestFormValues = [
+    'course_id' => '',
+    'requested_title' => '',
+    'details' => '',
+];
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_POST['action'] ?? '') === 'create_note_request'
+) {
+    if (!$isStudentLoggedIn) {
+        http_response_code(403);
+        exit('Only student accounts can request notes.');
+    }
+
+    $sessionToken = $_SESSION['note_request_csrf_token'] ?? '';
+    $submittedToken = $_POST['csrf_token'] ?? '';
+    if (
+        !is_string($sessionToken)
+        || !is_string($submittedToken)
+        || $sessionToken === ''
+        || !hash_equals($sessionToken, $submittedToken)
+    ) {
+        http_response_code(400);
+        exit('Invalid form token. Refresh the page and try again.');
+    }
+
+    $courseIdInput = $_POST['course_id'] ?? '';
+    $requestFormValues['course_id'] = is_string($courseIdInput)
+        ? $courseIdInput
+        : '';
+    $requestFormValues['requested_title'] = trim(
+        is_string($_POST['requested_title'] ?? null)
+            ? $_POST['requested_title']
+            : ''
+    );
+    $requestFormValues['details'] = trim(
+        is_string($_POST['details'] ?? null) ? $_POST['details'] : ''
+    );
+    $courseId = filter_var(
+        $requestFormValues['course_id'],
+        FILTER_VALIDATE_INT
+    );
+
+    if (!$courseId || $courseId < 1) {
+        $requestError = 'Choose a valid course.';
+    } elseif (
+        $requestFormValues['requested_title'] === ''
+        || strlen($requestFormValues['requested_title']) > 200
+    ) {
+        $requestError = 'Note title is required and must be 200 characters or fewer.';
+    } elseif (strlen($requestFormValues['details']) > 2000) {
+        $requestError = 'Details must be 2000 characters or fewer.';
+    } else {
+        $courseStmt = mysqli_prepare(
+            $conn,
+            'SELECT course_id FROM courses WHERE course_id = ? LIMIT 1'
+        );
+        mysqli_stmt_bind_param($courseStmt, 'i', $courseId);
+        mysqli_stmt_execute($courseStmt);
+        $courseExists = mysqli_fetch_assoc(mysqli_stmt_get_result($courseStmt));
+        mysqli_stmt_close($courseStmt);
+
+        if (!$courseExists) {
+            $requestError = 'The selected course was not found.';
+        } else {
+            $duplicateStmt = mysqli_prepare(
+                $conn,
+                "SELECT request_id
+                 FROM note_requests
+                 WHERE student_db_id = ?
+                   AND course_id = ?
+                   AND status = 'Open'
+                   AND LOWER(TRIM(requested_title)) = LOWER(TRIM(?))
+                 LIMIT 1"
+            );
+            mysqli_stmt_bind_param(
+                $duplicateStmt,
+                'iis',
+                $studentId,
+                $courseId,
+                $requestFormValues['requested_title']
+            );
+            mysqli_stmt_execute($duplicateStmt);
+            $duplicateRequest = mysqli_fetch_assoc(
+                mysqli_stmt_get_result($duplicateStmt)
+            );
+            mysqli_stmt_close($duplicateStmt);
+
+            if ($duplicateRequest) {
+                $requestError = 'You already have an open request for this course and note title.';
+            } else {
+                $details = $requestFormValues['details'] === ''
+                    ? null
+                    : $requestFormValues['details'];
+                $insertStmt = mysqli_prepare(
+                    $conn,
+                    'INSERT INTO note_requests
+                        (student_db_id, course_id, requested_title, details)
+                     VALUES (?, ?, ?, ?)'
+                );
+                mysqli_stmt_bind_param(
+                    $insertStmt,
+                    'iiss',
+                    $studentId,
+                    $courseId,
+                    $requestFormValues['requested_title'],
+                    $details
+                );
+                mysqli_stmt_execute($insertStmt);
+                mysqli_stmt_close($insertStmt);
+
+                $requestSuccess = 'Your note request was posted.';
+                $requestFormValues = [
+                    'course_id' => '',
+                    'requested_title' => '',
+                    'details' => '',
+                ];
+            }
+        }
+    }
+}
+
+$requestCoursesResult = $isStudentLoggedIn
+    ? mysqli_query(
+        $conn,
+        'SELECT course_id, course_code, course_name
+         FROM courses
+         ORDER BY course_code ASC'
+    )
+    : null;
+
+$noteRequestsResult = mysqli_query(
+    $conn,
+    "SELECT r.request_id, r.requested_title, r.details, r.status, r.created_at,
+            c.course_code, c.course_name, s.name AS requester_name
+     FROM note_requests r
+     INNER JOIN courses c ON r.course_id = c.course_id
+     INNER JOIN students s ON r.student_db_id = s.student_db_id
+     ORDER BY CASE r.status WHEN 'Open' THEN 0 ELSE 1 END,
+              r.created_at DESC
+     LIMIT 100"
+);
+$noteRequestCount = mysqli_num_rows($noteRequestsResult);
 
 // Search notes by their content or related course/uploader details.
 $search = trim(is_string($_GET['q'] ?? null) ? $_GET['q'] : '');
@@ -124,6 +274,14 @@ $noteCount = mysqli_num_rows($result);
             gap: 20px;
         }
 
+        .page-header-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
         .page-header h1 {
             margin: 0 0 8px;
             color: #173b70;
@@ -181,6 +339,187 @@ $noteCount = mysqli_num_rows($result);
             margin: 0 0 12px;
             color: #64748b;
             font-size: 13px;
+        }
+
+        .note-requests-section {
+            margin: 28px 0;
+            padding: 22px;
+            border: 1px solid #e0e7f0;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 5px 18px rgba(20, 45, 80, 0.05);
+        }
+
+        .note-requests-heading {
+            margin-bottom: 16px;
+        }
+
+        .note-requests-heading h2 {
+            margin: 0 0 5px;
+            color: #173b70;
+            font-size: 21px;
+        }
+
+        .note-requests-heading p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .note-request-message {
+            padding: 11px 13px;
+            margin-bottom: 14px;
+            border-radius: 8px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 13px;
+        }
+
+        .note-request-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .note-requests-content {
+            display: grid;
+            grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.8fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .note-requests-content.request-list-only {
+            grid-template-columns: 1fr;
+        }
+
+        .note-request-form-panel,
+        .note-request-list-panel {
+            min-width: 0;
+            padding: 15px;
+            border: 1px solid #e0e7f0;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .note-request-form-panel > h3,
+        .note-request-list-panel > h3 {
+            margin: 0 0 12px;
+            color: #173b70;
+            font-size: 15px;
+        }
+
+        .note-request-form {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .note-request-form label {
+            display: grid;
+            gap: 5px;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .note-request-form input,
+        .note-request-form select,
+        .note-request-form textarea {
+            width: 100%;
+            padding: 8px 9px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: #fff;
+            color: #243047;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .note-request-form textarea {
+            resize: vertical;
+        }
+
+        .note-request-form button {
+            justify-self: start;
+            padding: 9px 13px;
+            border: 0;
+            border-radius: 8px;
+            background: #1d4ed8;
+            color: #fff;
+            font: inherit;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        .note-request-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .note-request-item {
+            padding: 11px;
+            border: 1px solid #e0e7f0;
+            border-radius: 9px;
+            background: #f8fafc;
+        }
+
+        .note-request-item-top,
+        .note-request-item-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .note-request-course {
+            color: #4338ca;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .note-request-status {
+            padding: 4px 8px;
+            border-radius: 20px;
+            background: #fff7ed;
+            color: #9a3412;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .note-request-status.fulfilled {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .note-request-item h3 {
+            margin: 8px 0 4px;
+            color: #173b70;
+            font-size: 16px;
+        }
+
+        .note-request-item-details {
+            margin: 0;
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .note-request-item-meta {
+            margin-top: 9px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .note-request-empty {
+            padding: 18px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 9px;
+            color: #64748b;
+            font-size: 13px;
+            text-align: center;
         }
 
         .visually-hidden {
@@ -329,6 +668,18 @@ $noteCount = mysqli_num_rows($result);
             white-space: nowrap;
         }
 
+        .page-header-actions .upload-btn {
+            border: 1px solid #1d4ed8;
+            background: #fff;
+            color: #1d4ed8;
+            text-decoration: none;
+        }
+
+        .page-header-actions .upload-btn:hover {
+            background: #1d4ed8;
+            color: #fff;
+        }
+
         .review-details {
             margin-top: 15px;
             padding-top: 12px;
@@ -461,6 +812,14 @@ $noteCount = mysqli_num_rows($result);
                 flex-direction: column;
             }
 
+            .note-requests-section {
+                padding: 16px;
+            }
+
+            .note-requests-content {
+                grid-template-columns: 1fr;
+            }
+
             .note-card {
                 padding: 16px;
             }
@@ -499,9 +858,16 @@ if (file_exists($headerPath)) {
                 </p>
             </div>
 
-            <a href="upload_note.php" class="btn btn-primary upload-btn">
-                + Upload Note
-            </a>
+            <div class="page-header-actions">
+                <a href="upload_note.php" class="btn upload-btn">
+                    + Upload Note
+                </a>
+                <?php if ($isStudentLoggedIn): ?>
+                    <a href="#note-requests" class="btn upload-btn">
+                        Request a Note
+                    </a>
+                <?php endif; ?>
+            </div>
 
         </div>
     </header>
@@ -849,6 +1215,109 @@ if (file_exists($headerPath)) {
 
         <?php endif; ?>
 
+    </section>
+
+    <section class="note-requests-section" id="note-requests">
+        <div class="note-requests-heading">
+            <h2>Note Requests</h2>
+            <p>
+                Everyone visiting Study Notes can see requests. Uploading a note
+                with the same course and title automatically marks a request fulfilled.
+            </p>
+        </div>
+
+        <?php if ($requestSuccess !== ''): ?>
+            <div class="note-request-message" role="status">
+                <?= e($requestSuccess) ?>
+            </div>
+        <?php endif; ?>
+        <?php if ($requestError !== ''): ?>
+            <div class="note-request-message note-request-error" role="alert">
+                <?= e($requestError) ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="note-requests-content <?= $isStudentLoggedIn ? '' : 'request-list-only' ?>">
+            <?php if ($isStudentLoggedIn): ?>
+                <div class="note-request-form-panel">
+                    <h3>Request a Note</h3>
+                    <form method="POST" action="notes.php#note-requests" class="note-request-form">
+                        <input type="hidden" name="action" value="create_note_request">
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?= e($_SESSION['note_request_csrf_token']) ?>"
+                        >
+                        <label>
+                            Course *
+                            <select name="course_id" required>
+                                <option value="">Select a course</option>
+                                <?php while ($course = mysqli_fetch_assoc($requestCoursesResult)): ?>
+                                    <option
+                                        value="<?= (int)$course['course_id'] ?>"
+                                        <?= $requestFormValues['course_id'] === (string)$course['course_id'] ? 'selected' : '' ?>
+                                    >
+                                        <?= e($course['course_code'] . ' - ' . $course['course_name']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </label>
+                        <label>
+                            Note title / topic *
+                            <input
+                                name="requested_title"
+                                maxlength="200"
+                                required
+                                placeholder="Use the same title when uploading"
+                                value="<?= e($requestFormValues['requested_title']) ?>"
+                            >
+                        </label>
+                        <label>
+                            Details (optional)
+                            <textarea
+                                name="details"
+                                maxlength="2000"
+                                rows="3"
+                                placeholder="Chapter, topic, or other helpful details"
+                            ><?= e($requestFormValues['details']) ?></textarea>
+                        </label>
+                        <button type="submit">Post Request</button>
+                    </form>
+                </div>
+            <?php endif; ?>
+
+            <div class="note-request-list-panel">
+                <h3>Requests</h3>
+                <div class="note-request-list">
+                    <?php if ($noteRequestCount === 0): ?>
+                        <div class="note-request-empty">No note requests yet.</div>
+                    <?php else: ?>
+                        <?php while ($request = mysqli_fetch_assoc($noteRequestsResult)): ?>
+                            <article class="note-request-item">
+                                <div class="note-request-item-top">
+                                    <span class="note-request-course">
+                                        <?= e($request['course_code'] . ' - ' . $request['course_name']) ?>
+                                    </span>
+                                    <span class="note-request-status <?= strtolower($request['status']) ?>">
+                                        <?= e($request['status']) ?>
+                                    </span>
+                                </div>
+                                <h3><?= e($request['requested_title']) ?></h3>
+                                <?php if (!empty($request['details'])): ?>
+                                    <p class="note-request-item-details">
+                                        <?= nl2br(e($request['details'])) ?>
+                                    </p>
+                                <?php endif; ?>
+                                <div class="note-request-item-meta">
+                                    <span>Requested by <?= e($request['requester_name']) ?></span>
+                                    <span><?= e(date('M d, Y', strtotime($request['created_at']))) ?></span>
+                                </div>
+                            </article>
+                        <?php endwhile; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
     </section>
 
 </main>
