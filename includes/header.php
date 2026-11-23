@@ -63,15 +63,13 @@ $opportunitiesUrl = $isLoggedIn
                 Features
             </a>
 
-            <?php if (!$isAlumniLoggedIn): ?>
-                <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">
-                    Notices
-                </a>
+            <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">
+                Notices
+            </a>
 
-                <a href="<?= htmlspecialchars($campusIssuesUrl, ENT_QUOTES, 'UTF-8') ?>">
-                    Campus Issues
-                </a>
-            <?php endif; ?>
+            <a href="<?= htmlspecialchars($campusIssuesUrl, ENT_QUOTES, 'UTF-8') ?>">
+                Campus Issues
+            </a>
 
             <a href="<?= htmlspecialchars($opportunitiesUrl, ENT_QUOTES, 'UTF-8') ?>">
                 Opportunities

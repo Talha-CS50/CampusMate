@@ -46,14 +46,6 @@ function campusMateRequireAccess(string $destination): void
         header('Location: ' . campusMateStudentLoginUrl($destination));
         exit;
     }
-
-    if (
-        (int)($_SESSION['alumni_db_id'] ?? 0) > 0
-        && $destination !== 'opportunities'
-    ) {
-        header('Location: /CampusMate/student/opportunities.php');
-        exit;
-    }
 }
 
 function campusMateRequireStudent(string $destination): void

@@ -12,6 +12,7 @@ require_once __DIR__ . '/../config/db.php';
 
 $studentId = (int)($_SESSION['student_db_id'] ?? 0);
 $isStudentLoggedIn = $studentId > 0;
+$isAlumniLoggedIn = (int)($_SESSION['alumni_db_id'] ?? 0) > 0;
 $isAdminLoggedIn = (int)($_SESSION['admin_id'] ?? 0) > 0;
 
 if ($isStudentLoggedIn && empty($_SESSION['review_csrf_token'])) {
@@ -737,8 +738,8 @@ if (file_exists($headerPath)) {
 
                         <div class="review-details">
                             <p class="form-note">
-                                <?= $isAdminLoggedIn
-                                    ? 'Admin accounts can browse notes but cannot submit student reviews.'
+                                <?= $isAdminLoggedIn || $isAlumniLoggedIn
+                                    ? 'Admin and Alumni accounts can browse notes but cannot submit student reviews.'
                                     : 'Want to rate or review this note? <a href="../login.php">Log in</a> first.' ?>
                             </p>
                         </div>
