@@ -27,7 +27,8 @@ $notesUrl = $isLoggedIn
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="/CampusMate/assets/css/style.css?v=20261110-notice-layout-4">
+    <link rel="stylesheet" href="/CampusMate/assets/css/style.css?v=20261124-mobile-menu-1">
+    <link rel="stylesheet" href="/CampusMate/assets/css/motion.css?v=20261124-calm-motion-1">
 
     <title>Campus Mate</title>
 </head>
@@ -52,86 +53,148 @@ $notesUrl = $isLoggedIn
 
         </a>
 
-        <!-- Navigation -->
-        <nav class="nav-links">
+        <button
+            class="nav-toggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="primary-navigation"
+        >
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
 
-            <a href="/CampusMate/" class="active">
-                Home
-            </a>
+        <div class="nav-menu" id="primary-navigation">
+            <nav class="nav-links" aria-label="Main navigation">
 
-            <a href="/CampusMate/#features">
-                Features
-            </a>
-
-            <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">
-                Notices
-            </a>
-
-            <a href="<?= htmlspecialchars($campusIssuesUrl, ENT_QUOTES, 'UTF-8') ?>">
-                Campus Issues
-            </a>
-
-            <a href="<?= htmlspecialchars($notesUrl, ENT_QUOTES, 'UTF-8') ?>">
-                Notes
-            </a>
-
-        </nav>
-
-        <!-- Buttons -->
-        <div class="nav-buttons">
-
-            <?php if ($isAdminLoggedIn): ?>
-
-                <a href="/CampusMate/admin/dashboard.php" class="login-btn">
-                    Admin Dashboard
+                <a href="/CampusMate/" class="active">
+                    Home
                 </a>
 
-                <a href="/CampusMate/admin/logout.php" class="login-btn">
-                    Logout
+                <a href="/CampusMate/#features">
+                    Features
                 </a>
 
-            <?php elseif ($isStudentLoggedIn): ?>
-
-                <a href="/CampusMate/student/dashboard.php" class="login-btn">
-                    Dashboard
+                <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">
+                    Notices
                 </a>
 
-                <a href="/CampusMate/student/profile.php" class="login-btn">
-                    My Profile
+                <a href="<?= htmlspecialchars($campusIssuesUrl, ENT_QUOTES, 'UTF-8') ?>">
+                    Campus Issues
                 </a>
 
-                <a href="/CampusMate/student/logout.php" class="login-btn">
-                    Logout
+                <a href="<?= htmlspecialchars($notesUrl, ENT_QUOTES, 'UTF-8') ?>">
+                    Notes
                 </a>
 
-            <?php elseif ($isAlumniLoggedIn): ?>
+            </nav>
 
-                <a href="/CampusMate/alumni/post_opportunity.php" class="login-btn">
-                    Post Opportunity
-                </a>
+            <div class="nav-buttons">
 
-                <a href="/CampusMate/alumni/logout.php" class="login-btn">
-                    Alumni Logout
-                </a>
+                <?php if ($isAdminLoggedIn): ?>
 
-            <?php else: ?>
+                    <a href="/CampusMate/admin/dashboard.php" class="login-btn">
+                        Admin Dashboard
+                    </a>
 
-                <a href="/CampusMate/student/login.php" class="login-btn">
-                    Login
-                </a>
+                    <a href="/CampusMate/admin/logout.php" class="login-btn">
+                        Logout
+                    </a>
 
-                <a href="/CampusMate/student/register.php" class="register-btn">
-                    Get Started
-                </a>
+                <?php elseif ($isStudentLoggedIn): ?>
 
-                <a href="/CampusMate/alumni/login.php" class="login-btn">
-                    Alumni
-                </a>
+                    <a href="/CampusMate/student/dashboard.php" class="login-btn">
+                        Dashboard
+                    </a>
 
-            <?php endif; ?>
+                    <a href="/CampusMate/student/profile.php" class="login-btn">
+                        My Profile
+                    </a>
 
+                    <a href="/CampusMate/student/logout.php" class="login-btn">
+                        Logout
+                    </a>
+
+                <?php elseif ($isAlumniLoggedIn): ?>
+
+                    <a href="/CampusMate/alumni/post_opportunity.php" class="login-btn">
+                        Post Opportunity
+                    </a>
+
+                    <a href="/CampusMate/alumni/logout.php" class="login-btn">
+                        Alumni Logout
+                    </a>
+
+                <?php else: ?>
+
+                    <a href="/CampusMate/student/login.php" class="login-btn">
+                        Login
+                    </a>
+
+                    <a href="/CampusMate/student/register.php" class="register-btn">
+                        Get Started
+                    </a>
+
+                    <a href="/CampusMate/alumni/login.php" class="login-btn">
+                        Alumni
+                    </a>
+
+                <?php endif; ?>
+
+            </div>
         </div>
 
     </div>
 
 </header>
+
+<script>
+(() => {
+    const toggle = document.querySelector('.nav-toggle');
+    const menu = document.getElementById('primary-navigation');
+
+    if (!toggle || !menu) {
+        return;
+    }
+
+    const setMenuOpen = (isOpen) => {
+        menu.classList.toggle('is-open', isOpen);
+        toggle.setAttribute('aria-expanded', String(isOpen));
+        toggle.setAttribute(
+            'aria-label',
+            isOpen ? 'Close navigation menu' : 'Open navigation menu'
+        );
+    };
+
+    toggle.addEventListener('click', () => {
+        setMenuOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    menu.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => setMenuOpen(false));
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!menu.contains(event.target) && !toggle.contains(event.target)) {
+            setMenuOpen(false);
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (
+            event.key === 'Escape'
+            && toggle.getAttribute('aria-expanded') === 'true'
+        ) {
+            setMenuOpen(false);
+            toggle.focus();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 950) {
+            setMenuOpen(false);
+        }
+    });
+})();
+</script>

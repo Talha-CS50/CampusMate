@@ -162,6 +162,8 @@ if ($department_result) {
 
     <link rel="stylesheet"
           href="/CampusMate/assets/css/auth.css">
+    <link rel="stylesheet"
+          href="/CampusMate/assets/css/motion.css?v=20261124-calm-motion-1">
 
 </head>
 

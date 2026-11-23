@@ -84,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alumni Registration | CampusMate</title>
     <link rel="stylesheet" href="/CampusMate/assets/css/auth.css">
+    <link rel="stylesheet" href="/CampusMate/assets/css/motion.css?v=20261124-calm-motion-1">
 </head>
 <body>
 <div class="auth-page">

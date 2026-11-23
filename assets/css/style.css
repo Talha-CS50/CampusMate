@@ -179,6 +179,50 @@ a {
     width: 18px;
 }
 
+.nav-menu {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    min-width: 0;
+}
+
+.nav-toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.nav-toggle span {
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: #374151;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.nav-toggle[aria-expanded="true"] span:first-child {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] span:last-child {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
 
 /* Buttons */
 
@@ -1894,8 +1938,61 @@ a {
 
 @media (max-width: 950px) {
 
-    .nav-links {
+    .nav-container {
+        min-height: 68px;
+        flex-wrap: wrap;
+        gap: 0 14px;
+        padding: 10px 0;
+    }
+
+    .nav-toggle {
+        display: flex;
+        order: 2;
+        margin-left: auto;
+    }
+
+    .nav-menu {
         display: none;
+        flex: 1 0 100%;
+        flex-direction: column;
+        align-items: stretch;
+        order: 3;
+        gap: 0;
+        padding-top: 10px;
+        margin-top: 10px;
+        border-top: 1px solid #eef0f4;
+    }
+
+    .nav-menu.is-open {
+        display: flex;
+    }
+
+    .nav-links {
+        width: 100%;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .nav-links a {
+        padding: 9px 10px;
+        border-radius: 8px;
+    }
+
+    .nav-links a::after {
+        display: none;
+    }
+
+    .nav-links a:hover {
+        background: #f5f3ff;
+    }
+
+    .nav-buttons {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        padding-top: 10px;
+        margin-top: 8px;
+        border-top: 1px solid #eef0f4;
     }
 
 
@@ -1958,11 +2055,6 @@ a {
 
 
 @media (max-width: 650px) {
-
-    .nav-buttons .login-btn {
-        display: none;
-    }
-
 
     .register-btn {
         padding: 9px 13px;
@@ -2043,6 +2135,11 @@ a {
 
     .notice-grid {
         grid-template-columns: 1fr;
+    }
+
+    .notice-list > .notice-card-link,
+    .notice-list-empty {
+        flex: 0 0 auto;
     }
 
     .featured-notice-link,
@@ -2164,3 +2261,5 @@ a {
     }
 
 }
+
+

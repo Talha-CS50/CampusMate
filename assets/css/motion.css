@@ -1,0 +1,119 @@
+body {
+    animation: calmPageIn 0.35s ease-out both;
+}
+
+.logo-mark {
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+:where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="button"]
+) {
+    transition:
+        color 0.2s ease,
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.campus-issue-card,
+.opportunity-entry,
+.note-card,
+.note-request-item,
+.dashboard-stat,
+.profile-stat,
+.profile-note,
+.stat-card {
+    transition:
+        transform 0.24s ease,
+        box-shadow 0.24s ease,
+        border-color 0.24s ease;
+}
+
+:where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="button"],
+    [tabindex]
+):focus-visible {
+    outline: 3px solid rgba(99, 102, 241, 0.35);
+    outline-offset: 3px;
+}
+
+@keyframes calmPageIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .logo:hover .logo-mark {
+        transform: rotate(-4deg) scale(1.04);
+        box-shadow: 0 10px 24px rgba(99, 102, 241, 0.26);
+    }
+
+    :where(
+        button:not(:disabled),
+        input[type="submit"]:not(:disabled),
+        input[type="button"]:not(:disabled),
+        [role="button"],
+        .login-btn,
+        .register-btn,
+        .primary-btn,
+        .secondary-btn,
+        .opportunity-btn,
+        .opportunity-apply,
+        .upload-btn,
+        .issue-submit-button,
+        .profile-button,
+        .issue-approve,
+        .issue-reject,
+        .notice-back-button,
+        .notice-all-link,
+        .study-banner-button,
+        .btn-login
+    ):hover {
+        transform: translateY(-2px);
+    }
+
+    .campus-issue-card:hover,
+    .opportunity-entry:hover,
+    .note-card:hover,
+    .note-request-item:hover,
+    .dashboard-stat:hover,
+    .profile-stat:hover,
+    .profile-note:hover,
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: #dfe3ff;
+        box-shadow: 0 12px 26px rgba(31, 41, 55, 0.08);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

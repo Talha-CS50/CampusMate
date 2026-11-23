@@ -667,6 +667,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
             .search-form input { max-width: none; }
         }
     </style>
+    <link rel="stylesheet" href="/CampusMate/assets/css/motion.css?v=20261124-calm-motion-1">
 </head>
 <body>
     <header class="topbar">
