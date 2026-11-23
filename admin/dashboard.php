@@ -257,6 +257,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 : 'Opportunity was not found.';
             redirectDashboard('opportunities');
         }
+    } elseif ($action === 'review_alumni_opportunity') {
+        $opportunityId = filter_var(
+            $_POST['opportunity_id'] ?? '',
+            FILTER_VALIDATE_INT
+        );
+        $approvalStatus = $_POST['approval_status'] ?? '';
+        $approvalStatus = is_string($approvalStatus) ? $approvalStatus : '';
+
+        if (!$opportunityId || $opportunityId < 1) {
+            $error = 'Invalid Alumni opportunity selected.';
+        } elseif (!in_array($approvalStatus, ['Approved', 'Rejected'], true)) {
+            $error = 'Select a valid opportunity decision.';
+        } else {
+            $stmt = mysqli_prepare(
+                $conn,
+                'UPDATE opportunities
+                 SET approval_status = ?
+                 WHERE opportunity_id = ? AND alumni_db_id IS NOT NULL'
+            );
+            mysqli_stmt_bind_param($stmt, 'si', $approvalStatus, $opportunityId);
+            mysqli_stmt_execute($stmt);
+            $updated = mysqli_stmt_affected_rows($stmt) === 1;
+            mysqli_stmt_close($stmt);
+
+            $_SESSION['admin_dashboard_flash'] = $updated
+                ? 'Alumni opportunity review updated.'
+                : 'Alumni opportunity was not found or is already in that state.';
+            redirectDashboard('opportunities');
+        }
     } elseif ($action === 'review_campus_issue') {
         $issueId = filter_var($_POST['issue_id'] ?? '', FILTER_VALIDATE_INT);
         $approvalStatus = $_POST['approval_status'] ?? '';
@@ -445,6 +474,7 @@ if ($editOpportunityId && $editOpportunityId > 0) {
 $stats = [];
 foreach ([
     'Students' => 'students',
+    'Alumni' => 'alumni',
     'Study notes' => 'notes',
     'Notices' => 'notices',
     'Opportunities' => 'opportunities',
@@ -466,10 +496,17 @@ $noticesResult = mysqli_query(
 $opportunitiesResult = mysqli_query(
     $conn,
     'SELECT o.opportunity_id, o.title, o.`type`, o.organization, o.description,
-            o.application_link, o.deadline, o.created_at, a.name AS admin_name
+            o.application_link, o.deadline, o.created_at, o.approval_status,
+            a.name AS admin_name, al.name AS alumni_name, al.alumni_id
      FROM opportunities o
      LEFT JOIN admins a ON o.admin_id = a.admin_id
-     ORDER BY o.created_at DESC'
+     LEFT JOIN alumni al ON o.alumni_db_id = al.alumni_db_id
+     ORDER BY CASE o.approval_status
+                  WHEN \'Pending\' THEN 0
+                  WHEN \'Approved\' THEN 1
+                  ELSE 2
+              END,
+              o.created_at DESC'
 );
 
 $campusIssuesResult = mysqli_query(
@@ -648,7 +685,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
     <main>
         <section class="welcome" id="overview">
             <h1>Welcome, <?= $adminName ?>!</h1>
-            <p>Manage notices and opportunities, moderate campus issue reports, review study notes, and monitor platform activity.</p>
+            <p>Manage campus notices, review Alumni job and internship submissions, and monitor platform activity.</p>
         </section>
 
         <?php if ($flash): ?>
@@ -876,7 +913,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
                 </div>
             </form>
 
-            <h2 style="margin-top:28px">Published opportunities</h2>
+            <h2 style="margin-top:28px">All opportunities</h2>
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -890,7 +927,7 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
                     </thead>
                     <tbody>
                     <?php if (mysqli_num_rows($opportunitiesResult) === 0): ?>
-                        <tr><td colspan="5" class="muted">No opportunities published yet.</td></tr>
+                        <tr><td colspan="5" class="muted">No opportunities submitted yet.</td></tr>
                     <?php else: ?>
                         <?php while ($opportunity = mysqli_fetch_assoc($opportunitiesResult)): ?>
                             <tr>
@@ -905,10 +942,25 @@ $adminName = e($_SESSION['admin_name'] ?? 'Admin');
                                 <td><?= e($opportunity['deadline'] ?: '—') ?></td>
                                 <td>
                                     <?= e(date('d M Y', strtotime($opportunity['created_at']))) ?>
-                                    <p>By <?= e($opportunity['admin_name'] ?: 'Admin') ?></p>
+                                    <p>
+                                        By <?= e($opportunity['alumni_name'] ?: $opportunity['admin_name'] ?: 'Admin') ?>
+                                        <?php if (!empty($opportunity['alumni_id'])): ?>
+                                            (Alumni ID: <?= e($opportunity['alumni_id']) ?>)
+                                        <?php endif; ?>
+                                    </p>
+                                    <p>Status: <?= e($opportunity['approval_status']) ?></p>
                                 </td>
                                 <td>
                                     <div class="row-actions">
+                                        <?php if (!empty($opportunity['alumni_id'])): ?>
+                                            <form method="POST" action="dashboard.php#opportunities">
+                                                <input type="hidden" name="csrf_token" value="<?= e($_SESSION['admin_dashboard_csrf']) ?>">
+                                                <input type="hidden" name="action" value="review_alumni_opportunity">
+                                                <input type="hidden" name="opportunity_id" value="<?= (int)$opportunity['opportunity_id'] ?>">
+                                                <button class="issue-approve" type="submit" name="approval_status" value="Approved">Approve</button>
+                                                <button class="issue-reject" type="submit" name="approval_status" value="Rejected">Reject</button>
+                                            </form>
+                                        <?php endif; ?>
                                         <a
                                             class="button button-muted"
                                             href="dashboard.php?edit_opportunity=<?= (int)$opportunity['opportunity_id'] ?>#opportunities"

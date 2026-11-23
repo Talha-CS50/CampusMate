@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/student_auth.php';
 
 $isStudentLoggedIn = (int)($_SESSION['student_db_id'] ?? 0) > 0;
+$isAlumniLoggedIn = (int)($_SESSION['alumni_db_id'] ?? 0) > 0;
 $isAdminLoggedIn = (int)($_SESSION['admin_id'] ?? 0) > 0;
 $isLoggedIn = campusMateHasAccess();
 $noticesUrl = $isLoggedIn
@@ -62,13 +63,15 @@ $opportunitiesUrl = $isLoggedIn
                 Features
             </a>
 
-            <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">
-                Notices
-            </a>
+            <?php if (!$isAlumniLoggedIn): ?>
+                <a href="<?= htmlspecialchars($noticesUrl, ENT_QUOTES, 'UTF-8') ?>">
+                    Notices
+                </a>
 
-            <a href="<?= htmlspecialchars($campusIssuesUrl, ENT_QUOTES, 'UTF-8') ?>">
-                Campus Issues
-            </a>
+                <a href="<?= htmlspecialchars($campusIssuesUrl, ENT_QUOTES, 'UTF-8') ?>">
+                    Campus Issues
+                </a>
+            <?php endif; ?>
 
             <a href="<?= htmlspecialchars($opportunitiesUrl, ENT_QUOTES, 'UTF-8') ?>">
                 Opportunities
@@ -103,6 +106,16 @@ $opportunitiesUrl = $isLoggedIn
                     Logout
                 </a>
 
+            <?php elseif ($isAlumniLoggedIn): ?>
+
+                <a href="/CampusMate/alumni/post_opportunity.php" class="login-btn">
+                    Post Opportunity
+                </a>
+
+                <a href="/CampusMate/alumni/logout.php" class="login-btn">
+                    Alumni Logout
+                </a>
+
             <?php else: ?>
 
                 <a href="/CampusMate/student/login.php" class="login-btn">
@@ -111,6 +124,10 @@ $opportunitiesUrl = $isLoggedIn
 
                 <a href="/CampusMate/student/register.php" class="register-btn">
                     Get Started
+                </a>
+
+                <a href="/CampusMate/alumni/login.php" class="login-btn">
+                    Alumni
                 </a>
 
             <?php endif; ?>

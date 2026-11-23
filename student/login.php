@@ -77,6 +77,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 // Prevent session fixation
                 session_regenerate_id(true);
 
+                unset(
+                    $_SESSION["alumni_db_id"],
+                    $_SESSION["alumni_id"],
+                    $_SESSION["alumni_name"],
+                    $_SESSION["alumni_email"],
+                    $_SESSION["admin_id"],
+                    $_SESSION["admin_name"]
+                );
                 $_SESSION["student_db_id"] = $student["student_db_id"];
                 $_SESSION["student_id"] = $student["student_id"];
                 $_SESSION["student_name"] = $student["name"];

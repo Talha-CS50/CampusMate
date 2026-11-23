@@ -21,6 +21,17 @@ CREATE TABLE admins (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE alumni (
+    alumni_db_id INT AUTO_INCREMENT PRIMARY KEY,
+    alumni_id VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    approval_status ENUM('Pending', 'Approved', 'Rejected')
+        NOT NULL DEFAULT 'Approved',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
 -- 3. Students
 
@@ -153,11 +164,19 @@ CREATE TABLE opportunities (
     description TEXT,
     application_link VARCHAR(255),
     deadline DATE,
-    admin_id INT NOT NULL,
+    admin_id INT NULL,
+    alumni_db_id INT NULL,
+    approval_status ENUM('Pending', 'Approved', 'Rejected')
+        NOT NULL DEFAULT 'Approved',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (admin_id)
         REFERENCES admins(admin_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    FOREIGN KEY (alumni_db_id)
+        REFERENCES alumni(alumni_db_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );

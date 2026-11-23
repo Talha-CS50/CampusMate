@@ -32,6 +32,7 @@ function campusMateStudentRedirectTarget(string $destination): string
 function campusMateHasAccess(): bool
 {
     return (int)($_SESSION['student_db_id'] ?? 0) > 0
+        || (int)($_SESSION['alumni_db_id'] ?? 0) > 0
         || (int)($_SESSION['admin_id'] ?? 0) > 0;
 }
 
@@ -43,6 +44,14 @@ function campusMateRequireAccess(string $destination): void
 
     if (!campusMateHasAccess()) {
         header('Location: ' . campusMateStudentLoginUrl($destination));
+        exit;
+    }
+
+    if (
+        (int)($_SESSION['alumni_db_id'] ?? 0) > 0
+        && $destination !== 'opportunities'
+    ) {
+        header('Location: /CampusMate/student/opportunities.php');
         exit;
     }
 }
@@ -59,7 +68,24 @@ function campusMateRequireStudent(string $destination): void
             exit;
         }
 
+        if ((int)($_SESSION['alumni_db_id'] ?? 0) > 0) {
+            header('Location: /CampusMate/');
+            exit;
+        }
+
         header('Location: ' . campusMateStudentLoginUrl($destination));
+        exit;
+    }
+}
+
+function campusMateRequireAlumni(): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    if ((int)($_SESSION['alumni_db_id'] ?? 0) <= 0) {
+        header('Location: /CampusMate/alumni/login.php');
         exit;
     }
 }

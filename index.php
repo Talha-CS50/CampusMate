@@ -24,6 +24,7 @@ $homepageOpportunitiesResult = mysqli_query(
     $conn,
     'SELECT opportunity_id, title, `type`, organization, deadline, created_at
      FROM opportunities
+     WHERE approval_status = \'Approved\'
      ORDER BY created_at DESC
      LIMIT 3'
 );

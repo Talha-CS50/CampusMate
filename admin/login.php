@@ -65,6 +65,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             session_regenerate_id(true);
 
+            unset(
+                $_SESSION['student_db_id'],
+                $_SESSION['student_id'],
+                $_SESSION['student_name'],
+                $_SESSION['student_email'],
+                $_SESSION['alumni_db_id'],
+                $_SESSION['alumni_id'],
+                $_SESSION['alumni_name'],
+                $_SESSION['alumni_email']
+            );
             $_SESSION['admin_id'] = (int)$admin['admin_id'];
             $_SESSION['admin_name'] = $admin['name'];
 

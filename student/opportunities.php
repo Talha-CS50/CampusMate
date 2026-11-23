@@ -25,6 +25,7 @@ $opportunitiesResult = mysqli_query(
     'SELECT opportunity_id, title, `type`, organization, description,
             application_link, deadline, created_at
      FROM opportunities
+     WHERE approval_status = \'Approved\'
      ORDER BY created_at DESC'
 );
 $opportunityCount = mysqli_num_rows($opportunitiesResult);
@@ -36,7 +37,7 @@ include __DIR__ . '/../includes/header.php';
     <header class="opportunities-page-heading">
         <span class="opportunities-eyebrow">YOUR NEXT STEP</span>
         <h1>Career <span>Opportunities</span></h1>
-        <p>Explore internships, jobs, and scholarships shared by CampusMate administrators.</p>
+        <p>Explore internships, jobs, and scholarships shared by CampusMate admins and alumni.</p>
     </header>
 
     <p class="opportunities-count">
